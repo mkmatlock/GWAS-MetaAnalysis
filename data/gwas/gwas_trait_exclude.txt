@@ -1,0 +1,261 @@
+5-HTT brain serotonin transporter levels 
+AB1-42
+Adiponectin levels
+Aging
+Aging (time to event)
+Aging (time to death)
+Aging traits
+Alcohol consumption
+Amyloid A Levels
+Angiotensin-converting enzyme activity
+Anthropometric traits
+Anticoagulant levels
+Aortic root size
+Arterial stiffness
+Aspartate aminotransferase 
+Atrioventricular conduction
+Bilirubin levels
+Biochemical measures
+Biomedical quantitative traits
+Birth weight
+Bitter taste response
+Black vs. blond hair color
+Black vs. red hair color
+Blond vs. brown hair color
+Blood pressure
+Blue vs. brown eyes
+Blue vs. green eyes
+Body mass (lean)
+Body mass index
+Body mass index and fat mass
+Bone mineral density
+Bone mineral density (hip)
+Bone mineral density (spine)
+Brain development
+Brain imaging
+Brain lesion load
+Brain structure
+Brain development
+Butyrylcholinesterase levels
+C-reactive protein
+C4b binding protein levels
+Caffeine consumption
+Cardiac structure and function
+Carotenoid and tocopherol levels
+Carotid intima media thickness
+Caudate nucleus volume
+Caudate nucleus volume
+CD4:CD8 lymphocyte ratio
+Central corneal thickness
+Chemerin levels
+Cholesterol
+Cholesterol, total
+Coagulation factor levels
+Coffee consumption
+Cognitive ability
+Cognitive function
+Cognitive performance
+Cognitive test performance
+Common traits (Other)
+Corneal curvature
+Corneal structure
+Cortical thickness
+Cutaneous nevi
+Cystatin C
+D-dimer levels
+Diastolic blood pressure
+Digit length ratio
+Drinking behavior
+Drug-induced liver injury (amoxicillin-clavulanate)
+Drug-induced liver injury (flucloxacillin)
+E-selectin levels
+Educational attainment
+Electrocardiographic conduction measures
+Electrocardiographic traits
+Electroencephalogram traits
+Eosinophil counts
+Entorhinal cortical thickness
+Environmental confusion in the home
+Eosinophil counts
+Episodic memory
+Erythrocyte sedimentation rate
+Event-related brain oscillations
+Exercise (leisure time)
+Exercise treadmill test traits
+Eye color
+Eye color traits
+F-cell distribution
+Factor VII
+Fasting glucose-related traits
+Fasting insulin-related traits
+Fasting plasma glucose
+Femoral neck bone geometry
+Fetal hemoglobin levels
+Fibrinogen
+Folate pathway vitamin levels
+Fracture-related traits
+Freckles
+Freckling
+Functional MRI
+Gamma gluatamyl transferase levels
+Gamma glutamyl transpeptidase
+General cognitive ability
+Glycated hemoglobin levels
+Hair color
+Hair morphology
+HDL cholesterol
+HDL Cholesterol - Triglycerides (HDLC-TG)
+Heart rate variability traits
+Height
+Hematocrit
+Hematological and biochemical traits
+Hematological parameters
+Hematology traits
+Hemoglobin
+Hemoglobin levels
+Hemostatic factors and hematological phenotypes
+Hip bone size
+Hip geometry
+Homocysteine levels
+Immunoglobulin A
+Information processing speed
+Insulin resistance/response
+Insulin traits
+Insulin-like growth factors
+Intelligence
+Interleukin-18 levels
+Iris characteristics
+Iris color
+LDL cholesterol
+Left ventricular mass
+Lipid traits
+Lipoprotein-associated phospholipase A2 activity and mass
+Liver enzyme levels
+Liver enzyme levels (alanie transaminase)
+Liver enzyme levels (alkaline phosphatase)
+Liver enzyme levels (gamma-glutamyl transferase)
+Longevity
+Lp (a) levels
+Lymphocyte counts
+Mathematical ability
+Mean corpuscular hemoglobin
+Mean corpuscular volume
+Mean forced vital capacity from 2 exams
+Mean platelet volume
+Memory (short-term)
+Memory performance
+Menarche (age at onset)
+Menarche and menopause (age at onset)
+Menopause (age at onset)
+Metabolic traits
+Monocyte early outgrowth colony forming units
+Morbidity-free survival
+N-glycan levels
+Neutrophil count
+Nevus count
+Normalized brain volume
+Optic disc parameters
+Optic disc size (cup)
+Optic disc size (disc)
+Optic disc size (rim)
+Other erythrocyte phenotypes
+Ovarian reserve
+P-tau181p
+Permanent tooth development
+Personality dimensions
+Phospholipid levels (plasma)
+Platelet aggregation
+Platelet counts
+Platelet function and related traits
+PR interval
+Primary tooth development (number of teeth)
+Primary tooth development (time to first tooth eruption)
+Progranulin levels
+Proinsulin levels
+Protein C levels
+Protein quantitative trait loci
+Pulmonary function
+Pulmonary function measures
+Pulmonary function traits (other)
+QT interval
+Quantitative traits
+Radiation response
+Reasoning
+Recombination rate (females)
+Recombination rate (males)
+Red blood cell traits
+Red vs non-red hair color
+Red vs. non-red hair color
+Renal sinus fat
+Response to acetaminophen (hepatotoxicity)
+Response to antineoplastic agents
+Response to platinum-based agents
+Response to statin therapy
+Resting heart rate
+Retinal vascular caliber
+Retinol levels
+RR interval (heart rate)
+Select biomarker traits
+Self-rated health
+Serum calcium
+Serum creatinine
+Serum dehydroepiandrosterone sulphate levels
+Serum hepcidin 
+Serum IgE levels
+Serum iron levels
+Serum magnesium levels
+Serum markers of iron status
+Serum matrix metalloproteinase
+Serum metabolites
+Serum phosphorus levels
+Serum phytosterol levels
+Serum prostate-specific antigen levels
+Serum soluble E-selectin
+Serum testosterone
+Serum urate
+Serum uric acid
+Skin pigmentation
+Skin sensitivity to sun
+Sleep duration
+Sleepiness
+Smoking behavior
+Smoking cessation
+Soluble ICAM-1
+Soluble leptin receptor levels
+Soluble levels of adhesion molecules
+Sphingolipid levels
+Spine bone size
+Systolic blood pressure
+T-tau
+Tanning
+Telomere length
+Thyroid function
+Thyroid stimulating hormone
+Thyroid volume
+Tonometry
+Total ventricular volume
+TP53 carriage
+Triglycerides
+Triglycerides-Blood Pressure (TG-BP)
+Tuberculosis
+Two-hour glucose challenge
+Urinary albumin excretion
+Urinary metabolites
+Vascular endothelial growth factor levels
+Ventricular conduction
+Vertical cup-disc ratio
+Vitamin D insufficiency
+Vitamin D levels
+Vitamin E levels
+Volumetric brain MRI
+vWF and FVIII levels
+Waist circumference
+Waist Circumference - Triglycerides (WC-TG)
+Waist circumference and related phenotypes
+Waist-hip ratio
+Weight
+White blood cell count
+White blood cell types
+Working memory
+Wrist bone mass
+YKL-40 levels
