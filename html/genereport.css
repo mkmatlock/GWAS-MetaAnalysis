@@ -1,0 +1,172 @@
+
+
+
+#body {
+    background:#DDDDFF;
+    width:800px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#dheader {
+    background:#AAAAFF;
+    font-size: 24px;
+    padding-left: 10px;
+    color: #FFFFFF;
+}
+
+#description {
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom:10px;
+}
+
+.description {
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom:10px;
+}
+
+.header {
+    background:#AAAAFF;
+    font-size: 20px;
+    color: #FFFFFF;
+    padding-left: 10px;
+}
+
+.console {
+    padding-left:20px;
+    font-family:"Courier New", Courier, sans-serif;
+}
+
+.links {
+    text-align:center;
+    font-size: 20px;
+    padding-top: 10px;
+    padding-bottom:10px;
+}
+
+/* DAVID results formatting */
+
+/* Trait table formatting */
+.traittable {
+    text-align:left;
+    background: #CCCCFF;
+    border:solid;
+    border-color:white;
+    border-width:3px;
+    table-layout:auto;
+    width:700px;
+    margin-left:50px;
+    margin-right:50px;
+    
+    margin-bottom:10px;
+    margin-top:10px;
+}
+
+.traittable .traitlisthead {
+    font-weight: bold;
+    
+}
+
+.traittable .traitcol {
+    text-align:left;
+}
+
+.traittable .recol {
+    text-align:right;
+}
+    
+.traittable .genecol {
+    text-align:right;
+}
+
+.traittable .chicol {
+    text-align:right;
+}
+
+.traittable .pcol {
+    text-align:right;
+    background:#9999FF;
+    color:white;
+}
+
+
+/* Gene list formatting */
+
+.genetable {
+    text-align:left;
+    background: #CCCCFF;
+    border:solid;
+    border-color:white;
+    border-width:3px;
+    table-layout:auto;
+    margin-left:275px;
+    margin-right:275px;
+    width:250px;
+    
+    margin-bottom:10px;
+    margin-top:10px;
+}
+
+.genetable .genelisthead {
+    
+}
+
+.genetable .genecol {
+    text-align:left;
+}
+
+.genetable .traitcol {
+    text-align:right;
+}
+
+/* Chi square matrix formatting */
+
+.chireport {
+    margin-left:150px;
+    margin-right:150px;
+    width:500px;
+}
+
+.chireport p {
+    background:#BBBBFF;
+    font-size: 20px;
+    color: #FFFFFF;
+    padding-left: 10px;
+}
+
+table#chimatrix {
+    text-align:right;
+    font-family:"Courier New", Courier, sans-serif;
+    background: #CCCCFF;
+    border:solid;
+    border-color:white;
+    border-width:3px;
+    table-layout:fixed;
+    width:100%;
+}
+
+.chireportstats{
+    text-align:right;
+    table-layout:auto;
+    width:200px;
+    margin-left:300px;
+    margin-bottom:10px;
+}
+
+.chireportstats .name {
+    font-weight:bold;
+    text-align:left;
+}
+.chireportstats .value {
+    text-align:right;
+}
+
+.chicol1 {
+    font-weight: bold;
+}
+
+.chiheader {
+    font-weight: bold;
+}
