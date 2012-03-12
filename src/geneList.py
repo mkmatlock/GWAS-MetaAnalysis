@@ -1,6 +1,7 @@
 from pyCSV import *
 import geneVerifier as geneDB
 import geneUtils
+import os
 
 __DEBUG=0
 
@@ -90,7 +91,7 @@ def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0, __ENABLE_GENE_
                 geneCounts[g2] = 1
             
     duplicates, geneSet = geneUtils.addFilterFrequency(geneCounts, __CROSS_MATCH_LEVEL)
-    ofile = open(os.sep.join(["log","geneSetDuplicateFrequency.txt"]),'w')
+    ofile = open(os.sep.join(["results","log","geneSetDuplicateFrequency.txt"]),'w')
     
     glist = []
     
@@ -117,7 +118,7 @@ def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0, __ENABLE_GENE_
         print "Total Genes Remaining: ", len(geneSet)
         print "-----------------------------\n"
         
-    log_file = open("log\\loaded_genelist.txt",'w')
+    log_file = open(os.sep.join(["results","log","loaded_genelist.txt"]),'w')
     for gene in geneSet:
         log_file.write(gene+"\n")
     log_file.close()

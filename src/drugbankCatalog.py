@@ -3,6 +3,8 @@ from pyFASTA import *
 from geneUtils import *
 from pyCSV import *
 import geneUtils
+import os
+
 __DEBUG = 0
 
 __targetCatalogue = pyCSV()

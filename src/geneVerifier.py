@@ -1,5 +1,6 @@
 from pyCSV import *
 import geneUtils
+import os
 
 __DEBUG=0
 

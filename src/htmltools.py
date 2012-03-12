@@ -8,21 +8,7 @@ import scipy.stats as stats
 import geneVerifier as geneDB
 
 
-def createGeneListTable(page, genes, verify=None):
-    output_list = []
-    
-    total = 0
-    for geneSym in genes:
-        l = len(gwasDB.__traitDict[geneSym])
-        total += l
-        
-        if verify==None or geneSym in verify:
-            output_list.append(["<a href=\"../genelists/%s.html\" > %s </a>" % (geneSym,geneDB.__original_names[geneSym]), l])
-        else:
-            output_list.append([geneDB.__original_names[geneSym], l])
-        
-    output_list = sorted(output_list, key=lambda item: -item[1])
-    createTable(page, output_list, ["Gene","#Associated Traits"], "genelisthead", None, ["genecol","traitcol"],"genetable",None)
+
 
     
 def savePage( page, filename ):
@@ -30,7 +16,7 @@ def savePage( page, filename ):
     ofile.write(str(page))
     ofile.close()
     
-def createPage( pagetitle,css_file='../genereport.css'):
+def createPage( pagetitle,css_file='genereport.css'):
     page = markup.page()
     page.init( title=pagetitle,
                css = (css_file))

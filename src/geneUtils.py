@@ -1,5 +1,6 @@
 import geneVerifier as geneDB
 import math
+import os
 
 __DEBUG=0
 
@@ -105,7 +106,7 @@ def removeInvalidGenes(geneSet):
                 print "Gene:", gene,"is not valid..."
             remove.append(gene)
             
-    invalid_file = open("log\\invalid_genelist.txt",'w')
+    invalid_file = open(os.sep.join(["results","log","invalid_genelist.txt"]),'w')
     for r in remove:
         geneSet.remove(r)
         invalid_file.write(r + "\n")

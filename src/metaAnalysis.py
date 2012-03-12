@@ -6,6 +6,7 @@ import drugbankCatalog as drugDB
 import math
 import scipy.stats as stats
 import htmltools
+from markup import oneliner
 
 __ENABLE_GENE_VERIFICATION = 0
 __ENABLE_GENE_UPDATES = 0
@@ -93,6 +94,7 @@ def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
 def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
     
     traitSet = set(gwasDB.__studyByTrait.keys())
+    
     for trait in traitSet:
         traitGenes = gwasDB.getGenesForTrait(trait,pfilter_cutoff)
         
@@ -131,7 +133,7 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
         
             
         other = []
-        for gene in traitGenes - RE_genes - Drug_genes:
+        for gene in traitGenes - RE_genes - drug_genes:
             
             count = 0
             for studyId in gwasDB.__studyByTrait[trait]:
@@ -165,47 +167,7 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
         __traitMetaAnalysis[trait]['drugbank_chi'] = (a, b, c, d, chisq, pvalue)
         
         __traitMetaAnalysis[trait]['geneset_size'] = len(traitGenes)
-        
-    
-def createTraitListingsHTML(traitListDir):
-    
-    traitSet = set(gwasDB.__studyByTrait.keys())
-    
-    for trait in traitSet:
-    
-        traitMetadata = __traitMetaAnalysis[trait]
-        RE_proteins = traitMetadata['RE']
-        drug_proteins = traitMetadata['drugbank']
-        other_proteins = traitMetadata['other']
-        
-        chi_RE = traitMetadata['RE_chi']
-        chi_Drugbank = traitMetadata['drugbank_chi']
-        
-        traitListFilename = traitListDir + os.sep + trait.replace(" ","_").replace("/", " or ").replace("\\", " or ") + ".html"
-        
-        traitpage = createPage("Trait Summary: " + trait, css_file='../../genereport.css')
-        
-        pageDescription(traitpage, "Gene list overlap summary for trait: %s" % (trait))
-        
-        # two of these
-        
-        createChiTable(traitpage, "Overlap with rapidly evolving genes:", "RE", "trait", chi_RE[0], chi_RE[1], chi_RE[2], chi_RE[3], chi_RE[4], chi_RE[5])
-        
-        createChiTable(traitpage, "Overlap with drugbank genes:", "Drugbank", "trait", chi_Drugbank[0], chi_Drugbank[1], chi_Drugbank[2], chi_Drugbank[3], chi_Drugbank[4], chi_Drugbank[5])
-        
-        traitpage.div("Gene Lists:", class_="header")
-        
-        traitpage.div("Trait genes indicated as rapidly evolving: ", class_="description")
-        htmltools.createGeneListTable(traitpage, RE_proteins)
-        
-        traitpage.div("Trait genes associated with Drugbank targets: ", class_="description")
-        htmltools.createGeneListTable(traitpage, drug_proteins)
-        
-        traitpage.div("Other trait genes: ", class_="description")
-        htmltools.createGeneListTable(traitpage, other_proteins)
-        
-        savePage(traitpage, traitListFilename)
-    
+
 def getGWASFrequencyTable(genes):
     output_list = []
     
@@ -222,10 +184,68 @@ def getGWASFrequencyTable(genes):
     return total, output_list
 
     
+def createGeneListTable(page, genes, verify=None):
+    output_list = []
+    
+    total = 0
+    for pair in genes:
+        geneSym, l = pair
+        total += l
+        
+        if verify==None or geneSym in verify:
+            output_list.append(["<a href=\"../genelists/%s.html\" > %s </a>" % (geneSym, geneDB.__original_names[geneSym]), l])
+        else:
+            output_list.append([geneDB.__original_names[geneSym], l])
+        
+    output_list = sorted(output_list, key=lambda item: -item[1])
+    htmltools.createTable(page, output_list, ["Gene","#Associated Traits"], "genelisthead", None, ["genecol","traitcol"],"genetable",None)
+    
+    
+def createTraitListingsHTML(traitListDir):
+    
+    traitSet = set(gwasDB.__studyByTrait.keys())
+    
+    for trait in traitSet:
+        if trait not in __traitMetaAnalysis:
+            continue
+        
+        traitMetadata = __traitMetaAnalysis[trait]
+        RE_proteins = traitMetadata['RE']
+        drug_proteins = traitMetadata['drugbank']
+        other_proteins = traitMetadata['other']
+        
+        chi_RE = traitMetadata['RE_chi']
+        chi_Drugbank = traitMetadata['drugbank_chi']
+        
+        traitListFilename = os.sep.join([traitListDir, trait.replace(" ","_").replace("/", " or ").replace("\\", " or ") + ".html"])
+        
+        traitpage = htmltools.createPage("Trait Summary: " + trait, css_file='../genereport.css')
+        
+        htmltools.pageDescription(traitpage, "Gene list overlap summary for trait: %s" % (trait))
+        
+        # two of these
+        
+        htmltools.createChiTable(traitpage, "Overlap with rapidly evolving genes:", "RE", "trait", chi_RE[0], chi_RE[1], chi_RE[2], chi_RE[3], chi_RE[4], chi_RE[5])
+        
+        htmltools.createChiTable(traitpage, "Overlap with drugbank genes:", "Drugbank", "trait", chi_Drugbank[0], chi_Drugbank[1], chi_Drugbank[2], chi_Drugbank[3], chi_Drugbank[4], chi_Drugbank[5])
+        
+        traitpage.div("Gene Lists:", class_="header")
+        
+        traitpage.div("Trait genes indicated as rapidly evolving: ", class_="description")
+        createGeneListTable(traitpage, RE_proteins)
+        
+        traitpage.div("Trait genes associated with Drugbank targets: ", class_="description")
+        createGeneListTable(traitpage, drug_proteins)
+        
+        traitpage.div("Other trait genes: ", class_="description")
+        createGeneListTable(traitpage, other_proteins)
+        
+        htmltools.savePage(traitpage, traitListFilename)
+    
 def createGeneListingsHTML(geneListDir):
     for gene in gwasDB.__geneSet:
         
-        genePage = createPage("Gene Summary: " + geneDB.__original_names[gene], css_file='../../genereport.css')
+        genePage = htmltools.createPage("Gene Summary: " + geneDB.__original_names[gene], css_file='../genereport.css')
         
         
         # Create the disease trait tables
@@ -233,13 +253,13 @@ def createGeneListingsHTML(geneListDir):
         for trait in gwasDB.__traitDict[gene]:
             traits.append(trait)
             
-        traits = sorted(traits, key=lambda trait: -__traitMetaAnalysis[trait]['chi_RE'][0])
+        traits = sorted(traits, key=lambda trait: -__traitMetaAnalysis[trait]['RE_chi'][0])
         
         traitTable = []
         for trait in traits:
             cnt       = len(__traitMetaAnalysis[trait]['RE'])
-            chisq     = __traitMetaAnalysis[trait]['chi_RE'][4]
-            pvalue    = __traitMetaAnalysis[trait]['chi_RE'][5]
+            chisq     = __traitMetaAnalysis[trait]['RE_chi'][4]
+            pvalue    = __traitMetaAnalysis[trait]['RE_chi'][5]
             numgenes  = __traitMetaAnalysis[trait]['geneset_size']
             translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
             
@@ -249,13 +269,13 @@ def createGeneListingsHTML(geneListDir):
             
         genePage.div("Gene %s, total traits: %d" % (geneDB.__original_names[gene],len(traitTable)), class_="header")
         
-        createTable(genePage, traitTable, ["Disease/Trait", "#RE Genes", "#Trait Genes", "Chi-square", "p-value"], "traitlisthead", None, ["traitcol","recol", "genecol", "chicol","pcol"], "traittable", None)
+        htmltools.createTable(genePage, traitTable, ["Disease/Trait", "#RE Genes", "#Trait Genes", "Chi-square", "p-value"], "traitlisthead", None, ["traitcol","recol", "genecol", "chicol","pcol"], "traittable", None)
         
         
         # Create drug bank links
         
         
-        if gene not in drugDB.__drugDict
+        if gene not in drugDB.__drugDict:
             genePage.div("No drugs target gene %s" % (gene), class_="header")
         else:
             drugbank_size = len(drugDB.__drugDict[gene])
@@ -265,14 +285,18 @@ def createGeneListingsHTML(geneListDir):
             genePage.div.open(class_="druglist")
             genePage.ul.open()
             for drug in drugDB.__drugDict[gene]:
-                if __drugs[drug][1] != None:
-                    genePage.li(oneliner.a(__drugs[drug][0], href=__drugs[drug][1]))
-                else genePage.li(__drugs[drug][0])
+                link = "http://www.drugbank.ca/drugs/%s" % (drug)
+                if drug not in drugDB.__drugs:
+                    genePage.li(oneliner.a(drug, href=link))
+                elif drugDB.__drugs[drug][1] != None:
+                    genePage.li("<a href = \"%s\">%s</a><a href=\"%s\">alt</a>" % (link, drugDB.__drugs[drug][0], drugDB.__drugs[drug][1]))
+                else:
+                    genePage.li(oneliner.a(drugDB.__drugs[drug][0], href=link))
             genePage.ul.close()
             genePage.div.close()
             
         
-        savePage(genePage, geneListDir + os.sep + gene + ".html")
+        htmltools.savePage(genePage, os.sep.join([geneListDir, gene + ".html"]))
 
 if __name__ == "__main__":
     
@@ -302,7 +326,7 @@ if __name__ == "__main__":
             sys.exit(1)
     
     print "\nInitializing HGNC Database..."
-    geneDB.init(os.sep.join(["data","genelists","hgnc_symbols.txt"]),__EXCLUDE_PSEUDOGENES)
+    geneDB.init(os.sep.join(["data","hgnc","hgnc_symbols.txt"]),__EXCLUDE_PSEUDOGENES)
     
     print "\nLoading rapidly evolving proteins..."
     studyGenes = loadEvolutionaryGenes(os.sep.join(["data","genelists","positive_selection_gene_lists.txt"]),__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES,gene_frequency_filter)
@@ -310,7 +334,7 @@ if __name__ == "__main__":
     if __EXCLUDE_OLFACTORY_PROTEINS:
         print "\nExcluding olfactory proteins..."
         olfactoryProteins = pyCSV()
-        olfactoryProteins.load("data\\genelists\\olfactory_genes.csv","\t")
+        olfactoryProteins.load(os.sep.join(["data","genelists","olfactory_genes.csv"]),"\t")
         
         olfactoryGenes = set([item.lower() for item in geneUtils.columnToList(olfactoryProteins, 1, 1)])
         
@@ -321,7 +345,7 @@ if __name__ == "__main__":
     print "\nLoading GWAS catalogue..."
     gwasDB.init(os.sep.join(["data","gwas","gwascatalog.txt"]),__ENABLE_GENE_VERIFICATION, __ENABLE_GENE_UPDATES, __INCLUDE_MAPPED_GENES,trait_exclude_file,pfilter_cutoff)
     print "\nLoading DrugBank drug catalogue..."
-    drugDB.initTargets(os.sep.join(["data","drugbank","drug_links.csv"]))
+    drugDB.initDruglist(os.sep.join(["data","drugbank","drug_links.csv"]))
     print "\nLoading DrugBank drug target catalogue..."
     drugDB.initTargets(os.sep.join(["data","drugbank","target_links.csv"]), os.sep.join(["data","drugbank","all_target_protein.fasta"]),__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES)
     
@@ -336,8 +360,8 @@ if __name__ == "__main__":
     b1 = len(gwasWithoutCG)
     c1 = len(cgWithoutGWAS)
     d1 = len( geneDB.__approved_symbols - (studyGenes | gwasDB.__geneSet) )
-    chisq1 = geneUtils.contingentChiSquare(a,b,c,d)
-    pvalue1 = stats.chisqprob(chisq, 1)
+    chisq1 = geneUtils.contingentChiSquare(a1,b1,c1,d1)
+    pvalue1 = stats.chisqprob(chisq1, 1)
     
     
     
@@ -347,8 +371,8 @@ if __name__ == "__main__":
     b2 = len( drugDB.__geneSet - studyGenes )
     c2 = len( studyGenes - drugDB.__geneSet )
     d2 = len( geneDB.__approved_symbols - ( studyGenes | drugDB.__geneSet ) )
-    chisq2  = geneUtils.contingentChiSquare(a,b,c,d)
-    pvalue2 = stats.chisqprob(chisq, 1)
+    chisq2  = geneUtils.contingentChiSquare(a2,b2,c2,d2)
+    pvalue2 = stats.chisqprob(chisq2, 1)
     
     
     
@@ -359,28 +383,32 @@ if __name__ == "__main__":
     b3 = len( drugDB.__geneSet - gwasDB.__geneSet )
     c3 = len( gwasDB.__geneSet - drugDB.__geneSet )
     d3 = len( geneDB.__approved_symbols - ( drugDB.__geneSet | gwasDB.__geneSet ) )
-    chisq3  = geneUtils.contingentChiSquare(a,b,c,d)
-    pvalue3 = stats.chisqprob(chisq, 1)
+    chisq3  = geneUtils.contingentChiSquare(a3,b3,c3,d3)
+    pvalue3 = stats.chisqprob(chisq3, 1)
     
     
     # start preparing HTML reports
     
+    print "\n------------------------------\nPreparing HTML Reports..."
+    
     if not os.path.exists("results"):
         os.mkdir("results")
-    if not os.path.exists("results" + os.sep + "log"):
-        os.mkdir(os.sep.join(["results", "log"])
-    if not os.path.exists("results" + os.sep + "html"):
+    if not os.path.exists(os.sep.join(["results","log"])):
+        os.mkdir(os.sep.join(["results", "log"]))
+    if not os.path.exists(os.sep.join(["results","html"])):
         os.mkdir(os.sep.join(["results", "html"]))
         os.mkdir(os.sep.join(["results", "html", "genelists"]))
         os.mkdir(os.sep.join(["results", "html", "traitlists"]))
         os.mkdir(os.sep.join(["results", "html", "DAVID"]))
         
-        os.system("cp %s %s" % (os.sep.join(["html", "genereport.css"]), os.sep.join(["results", "html"]))
-        os.system("cp %s %s" % (os.sep.join(["html", "DAVID", str(gene_frequency_filter), "*"]), os.sep.join(["results", "html", "DAVID"]))
-    
-    
+    print "\nCopying support files..."
+        
+    os.system("copy %s %s" % (os.sep.join(["html", "genereport.css"]), os.sep.join(["results", "html"])))
+    os.system("copy %s %s" % (os.sep.join(["html", "DAVID", str(gene_frequency_filter), "*"]), os.sep.join(["results", "html", "DAVID"])))
     
     # make index.html
+    
+    print "Making index.html..."
     
     # Report data set properties
     
@@ -406,7 +434,6 @@ if __name__ == "__main__":
         indexpage.a("DAVID Results", href="DAVID/david_gwas_common.xhtml")
         
     indexpage.div.close()
-    indexpage.div.close()
     
     
     # report drugbank, RE overlap chi matrix
@@ -423,7 +450,6 @@ if __name__ == "__main__":
         indexpage.a("DAVID Results", href="DAVID/david_drugbank_common.xhtml")
     
     indexpage.div.close()
-    indexpage.div.close()
     
     
     # report drugbank, GWAS overlap chi matrix
@@ -439,7 +465,6 @@ if __name__ == "__main__":
         indexpage.br()
         indexpage.a("DAVID Results", href="DAVID/david_drugbank_gwas_common.xhtml")
     
-    indexpage.div.close()
     indexpage.div.close()
     
     
@@ -472,23 +497,23 @@ if __name__ == "__main__":
     print "Creating referenced HTML gene and trait list reports..."
     
     # write trait frequency tables
-    writeTraitPage("results\\html\\gwas_traits.html", "GWAS Traits for Rapidly Evolving Genes", "Listing of disease traits associated with genes in the rapidly evolving geneset", commonGenes, pfilter_cutoff)
-    writeTraitPage("results\\html\\drugbank_traits.html", "GWAS Traits for Drugbank Genes", "Listing of disease traits associated with genes in the drugbank targets database", gwasDB.__geneSet & drugDB.__geneSet, pfilter_cutoff)
-    writeTraitPage("results\\html\\overlap_traits.html", "GWAS Traits for overlap of RE and Drugbank", "Listing of disease traits associated with genes in the rapidly evolving geneset and the drugbank targets database", overlap, pfilter_cutoff)
+    writeTraitPage(os.sep.join(["results","html","gwas_traits.html"]), "GWAS Traits for Rapidly Evolving Genes", "Listing of disease traits associated with genes in the rapidly evolving geneset", commonGenes, pfilter_cutoff)
+    writeTraitPage(os.sep.join(["results","html","drugbank_traits.html"]), "GWAS Traits for Drugbank Genes", "Listing of disease traits associated with genes in the drugbank targets database", gwasDB.__geneSet & drugDB.__geneSet, pfilter_cutoff)
+    writeTraitPage(os.sep.join(["results","html","overlap_traits.html"]), "GWAS Traits for overlap of RE and Drugbank", "Listing of disease traits associated with genes in the rapidly evolving geneset and the drugbank targets database", overlap, pfilter_cutoff)
     
     # write gene tables
     
     total, geneTable = getGWASFrequencyTable(commonGenes)
-    writeGenePage("results\\html\\gwas_genes.html", "Rapidly Evolving Genes found in GWAS Disease Studies", "Listing of rapidly evolving genes found in GWAS.", total, geneTable)
+    writeGenePage(os.sep.join(["results","html","gwas_genes.html"]), "Rapidly Evolving Genes found in GWAS Disease Studies", "Listing of rapidly evolving genes found in GWAS.", total, geneTable)
     
     total, geneTable = getGWASFrequencyTable(commonDrugTargets)
-    writeGenePage("results\\html\\drugbank_genes.html", "Rapidly Evolving Genes found in Drugbank", "Listing of rapidly evolving genes found in Drugbank.", total, geneTable)
+    writeGenePage(os.sep.join(["results","html","drugbank_genes.html"]), "Rapidly Evolving Genes found in Drugbank", "Listing of rapidly evolving genes found in Drugbank.", total, geneTable)
     
     total, geneTable = getGWASFrequencyTable(gwas_drugbank_overlap)
-    writeGenePage("results\\html\\drugbank_gwas_genes.html", "Drugbank targets found in GWAS Disease Studies", "Listing of Drugbank targets found in GWAS Disease Studies.", total, geneTable)
+    writeGenePage(os.sep.join(["results","html","drugbank_gwas_genes.html"]), "Drugbank targets found in GWAS Disease Studies", "Listing of Drugbank targets found in GWAS Disease Studies.", total, geneTable)
     
     total, geneTable = getGWASFrequencyTable(overlap)
-    writeGenePage("results\\html\\all_genes.html", "Rapidly Evolving Genes found in GWAS Disease Studies and Drugbank", "Listing of rapidly evolving genes found in both GWAS and Drugbank.", total, geneTable)
+    writeGenePage(os.sep.join(["results","html","all_genes.html"]), "Rapidly Evolving Genes found in GWAS Disease Studies and Drugbank", "Listing of rapidly evolving genes found in both GWAS and Drugbank.", total, geneTable)
     
     
     

@@ -1,6 +1,7 @@
 from pyCSV import *
 import geneUtils
 import geneVerifier as geneDB
+import os
 
 __DEBUG=0
 
