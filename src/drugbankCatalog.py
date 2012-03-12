@@ -3,7 +3,7 @@ from pyFASTA import *
 from geneUtils import *
 from pyCSV import *
 import geneUtils
-__DEBUG = 2
+__DEBUG = 0
 
 __targetCatalogue = pyCSV()
 __drugCatalogue = pyCSV()
@@ -63,7 +63,7 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
             __geneSet.add(geneName)
             __drugDict[geneName] = set([])
     
-    invalid_file = open("log\\invalid_drugbank.txt",'w')
+    invalid_file = open(os.sep.join(["results","log","invalid_drugbank.txt"]),'w')
     for geneName in rejectedSet:
         invalid_file.write(geneName+"\n")
     invalid_file.close()            

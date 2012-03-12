@@ -2,16 +2,10 @@ from pyCSV import *
 import geneVerifier as geneDB
 import geneUtils
 
-__DEBUG=1
-__EXCLUDE_OLFACTORY_PROTEINS = 1
+__DEBUG=0
 
-def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0, __ENABLE_GENE_UPDATES=0, __CROSS_MATCH_LEVEL = 1, __EXCLUDE_OLFACTORY_PROTEINS = 1):
+def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0, __ENABLE_GENE_UPDATES=0, __CROSS_MATCH_LEVEL = 1):
     global __DEBUG
-    
-    olfactoryProteins = pyCSV()
-    olfactoryProteins.load("data\\genelists\\olfactory_genes.csv","\t")
-    
-    olfactoryGenes = set([item.lower() for item in geneUtils.columnToList(olfactoryProteins, 1, 1)])
     
     genesTSV = pyCSV()
     genesTSV.load(filename, "\t")
@@ -95,14 +89,9 @@ def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0, __ENABLE_GENE_
             except KeyError:
                 geneCounts[g2] = 1
             
-    duplicates, tgeneSet = geneUtils.addFilterFrequency(geneCounts, __CROSS_MATCH_LEVEL)
-    ofile = open("log\\geneSetDuplicateFrequency.txt",'w')
+    duplicates, geneSet = geneUtils.addFilterFrequency(geneCounts, __CROSS_MATCH_LEVEL)
+    ofile = open(os.sep.join(["log","geneSetDuplicateFrequency.txt"]),'w')
     
-    geneSet = set([])
-    for gene in tgeneSet:
-        if not (__EXCLUDE_OLFACTORY_PROTEINS and gene in olfactoryGenes):
-            geneSet.add(gene)
-            
     glist = []
     
     for gene in geneCounts:

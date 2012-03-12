@@ -11,6 +11,7 @@ __ENABLE_GENE_VERIFICATION = 0
 __ENABLE_GENE_UPDATES = 0
 __EXCLUDE_PSEUDOGENES = 0
 __INCLUDE_MAPPED_GENES = 0
+__EXCLUDE_OLFACTORY_PROTEINS = 1
 
 def getGeneListsByTrait(genes, pfilter):
     
@@ -126,29 +127,29 @@ if __name__ == "__main__":
             print "Invalid arg:", sys.argv[i]
             sys.exit(1)
     
-    # clean the geneList dir
-    print "Cleaning gene lists..."
-    geneListFolder = "results"+os.sep+"geneLists"
-    for filename in os.listdir(geneListFolder):
-        file_path = os.path.join(geneListFolder, filename)
-        try:
-            if os.path.isfile(file_path):
-                os.unlink(file_path)
-        except:
-            pass
-    
-    geneDB.init("data\\genelists\\hgnc_symbols.txt",__EXCLUDE_PSEUDOGENES)
+    geneDB.init(os.sep.join(["data","genelists","hgnc_symbols.txt"]),__EXCLUDE_PSEUDOGENES)
     
     print "\nLoading rapidly evolving proteins..."
-    studyGenes = loadEvolutionaryGenes("data\\genelists\\positive_selection_gene_lists.txt",__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES,gene_frequency_filter)
+    studyGenes = loadEvolutionaryGenes(os.sep.join(["data","genelists","positive_selection_gene_lists.txt"]),__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES,gene_frequency_filter)
+    
+    if __EXCLUDE_OLFACTORY_PROTEINS:
+        print "\nExcluding olfactory proteins..."
+        olfactoryProteins = pyCSV()
+        olfactoryProteins.load("data\\genelists\\olfactory_genes.csv","\t")
+        
+        olfactoryGenes = set([item.lower() for item in geneUtils.columnToList(olfactoryProteins, 1, 1)])
+        
+        for gene in olfactoryGenes:
+            if gene in studyGenes:
+                studyGenes.remove(gene)
     
     print "\nLoading GWAS catalogue..."
-    gwasDB.init("data\\gwas\\gwascatalog.txt",__ENABLE_GENE_VERIFICATION, __ENABLE_GENE_UPDATES, __INCLUDE_MAPPED_GENES,trait_exclude_file,pfilter_cutoff)
+    gwasDB.init(os.sep.join(["data","gwas","gwascatalog.txt"]),__ENABLE_GENE_VERIFICATION, __ENABLE_GENE_UPDATES, __INCLUDE_MAPPED_GENES,trait_exclude_file,pfilter_cutoff)
     
     print "\nLoading DrugBank drug catalogue..."
-    drugDB.initTargets("data\\drugbank\\drug_links.csv")
+    drugDB.initTargets(os.sep.join(["data","drugbank","drug_links.csv"]))
     print "\nLoading DrugBank drug target catalogue..."
-    drugDB.initTargets("data\\drugbank\\target_links.csv", "data\\drugbank\\all_target_protein.fasta",__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES)
+    drugDB.initTargets(os.sep.join(["data","drugbank","target_links.csv"]), os.sep.join(["data","drugbank","all_target_protein.fasta"]),__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES)
     
     commonGenes = studyGenes & gwasDB.__geneSet
     cgWithoutGWAS = studyGenes - gwasDB.__geneSet
@@ -187,13 +188,20 @@ if __name__ == "__main__":
     
     # start preparing HTML reports
     
+    if not os.path.exists("results"):
+        os.mkdir("results")
+    if not os.path.exists("results" + os.sep + "log"):
+        os.mkdir(os.sep.join(["results", "log"])
     if not os.path.exists("results" + os.sep + "html"):
-        os.mkdir("results" + os.sep + "html")
-        os.mkdir("results" + os.sep + "html" + os.sep + "genelists")
-        os.mkdir("results" + os.sep + "html" + os.sep + "traitlists")
-        os.mkdir("results" + os.sep + "html" + os.sep + "DAVID")
-        os.system("cp %s %s" % ("html" + os.sep + "genereport.css", "results" + os.sep + "html")
-        os.system("cp %s %s" % ("html" + os.sep + "DAVID_" + gene_frequency_filter + os.sep + "*", "results" + os.sep + "html" + os.sep + "DAVID")
+        os.mkdir(os.sep.join(["results", "html"]))
+        os.mkdir(os.sep.join(["results", "html", "genelists"]))
+        os.mkdir(os.sep.join(["results", "html", "traitlists"]))
+        os.mkdir(os.sep.join(["results", "html", "DAVID"]))
+        
+        os.system("cp %s %s" % (os.sep.join(["html", "genereport.css"]), os.sep.join(["results", "html"]))
+        os.system("cp %s %s" % (os.sep.join(["html", "DAVID", str(gene_frequency_filter), "*"]), os.sep.join(["results", "html", "DAVID"]))
+    
+    
     
     # make index.html
     

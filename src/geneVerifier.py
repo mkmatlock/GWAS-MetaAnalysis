@@ -1,7 +1,7 @@
 from pyCSV import *
 import geneUtils
 
-__DEBUG=1
+__DEBUG=0
 
 def __strToList(strItem):
     if strItem == None:

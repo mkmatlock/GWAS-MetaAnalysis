@@ -2,7 +2,7 @@ from pyCSV import *
 import geneUtils
 import geneVerifier as geneDB
 
-__DEBUG=1
+__DEBUG=0
 
 __geneSet = set([])
 __traitDict = {}
@@ -148,7 +148,7 @@ def init(filename, __ENABLE_GENE_VERIFICATION = 0, __ENABLE_GENE_UPDATES = 0, __
                     geneSym = geneUtils.formatGeneSymbol(geneSym)
                     __addGene(i,geneSym, geneTrait, __ENABLE_GENE_VERIFICATION, __ENABLE_GENE_UPDATES, updatedGeneSet, invalidGeneSet)
         
-    invalid_file = open("log\\invalid_gwas.txt",'w')
+    invalid_file = open(os.sep.join(["results","log","invalid_gwas.txt"]),'w')
     
     for geneSym in invalidGeneSet:
         invalid_file.write(geneSym+"\n")

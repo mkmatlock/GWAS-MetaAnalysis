@@ -1,7 +1,7 @@
 import geneVerifier as geneDB
 import math
 
-__DEBUG=1
+__DEBUG=0
 
 
 def contingentChiSquare(a,b,c,d):
