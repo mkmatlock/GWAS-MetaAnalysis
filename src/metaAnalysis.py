@@ -40,6 +40,21 @@ def getGeneListsByTrait(genes, pfilter):
     
     return traitChi
 
+def getGWASFrequencyTable(genes):
+    output_list = []
+    
+    total = 0
+    for geneSym in genes:
+        if geneSym in gwasDB.__traitDict:
+            l = len(gwasDB.__traitDict[geneSym])
+        else:
+            l = 0
+        total += l
+        output_list.append((geneSym, l))
+        
+    output_list = sorted(output_list, key=lambda item: -item[1])
+    return total, output_list
+
 def writeGenePage(filename, title, desc, commonGenes):
     genepage = htmltools.createPage(title)
     
@@ -83,152 +98,6 @@ def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
     htmltools.createTable(traitpage, traitTable, ["Disease/Trait", "# RE Genes", "# Trait Genes", "chi-square", "p-value"], "traitlisthead", None, ["traitcol", "recol", "genecol", "chicol","pcol"], "traittable", None)
     htmltools.endPage(traitpage)
     htmltools.savePage(traitpage, filename)
-
-
-def printList(list, columns = 4, width=30):
-    i = 0
-    while i < len(list):
-        
-        arg_string = ""
-        arg_list = []
-        
-        j = i
-        while j < i+columns and j < len(list):
-            arg_string += "%-" + str(width) + "s "
-            
-            item = list[j]
-            
-            if (len(item) > width-1):
-                item = item[:width-5] + "..."
-            
-            arg_list.append(item)
-            j+=1
-        
-        print arg_string % tuple(arg_list)
-        
-        i+=columns
-    
-
-def getGWASFrequencyTable(genes):
-    output_list = []
-    
-    total = 0
-    for geneSym in genes:
-        if geneSym in gwasDB.__traitDict:
-            l = len(gwasDB.__traitDict[geneSym])
-        else:
-            l = 0
-        total += l
-        output_list.append((geneSym, l))
-        
-    output_list = sorted(output_list, key=lambda item: -item[1])
-    return total, output_list
-    
-    
-def writeGeneListToFileWithGWASFreq(genes,filename):
-    total, output_list = getGWASFrequencyTable(genes)
-    
-    ofile = open(filename,'w')
-    ofile.write("%-20s  %d\n" % ("Total",total))
-    ofile.write("-------------------------\n")
-    for item in output_list:
-        ofile.write("%-20s  %d\n" % item)
-    ofile.close()
-    
-def writeGeneListToFile(genes,filename):
-
-    geneList = sorted(list(genes))
-    ofile = open(filename,'w')
-    for gene in geneList:
-        ofile.write(geneDB.__original_names[gene]+"\n")
-    ofile.close()
-
-def writeTraitFrequenciesToFile(genes, filename, geneListDir, pfilter):
-        
-    ofile = open(filename,'w')
-    traitSet = set([])
-    for gene in genes:
-        if gene in gwasDB.__traitDict:
-            for trait in gwasDB.__traitDict[gene]:
-                traitSet.add(trait)
-    
-    probabilities = []
-    
-    for trait in traitSet:
-        traitGenes = gwasDB.getGenesForTrait(trait,pfilter)
-        
-        listA = traitGenes & genes
-        listC = traitGenes - genes
-        if geneListDir != 0:
-            geneListFilename = geneListDir + os.sep + trait.replace(" ","_").replace("/", " or ").replace("\\", " or ") + ".txt"
-            
-            geneFile = open(geneListFilename,'w')
-            
-            geneFile.write("%-20s%d\n" % ("Rapidly Evolving:",len(listA)))
-            geneFile.write("---------------------\n")
-            
-            slist = []
-            for gene in listA:
-                
-                count = 0
-                for studyId in gwasDB.__studyByTrait[trait]:
-                    if studyId in gwasDB.__studyGenes:
-                        if gene in gwasDB.__studyGenes[studyId]:
-                            count+=1
-                slist.append((gene,count))
-                
-            for item in sorted(slist, key=lambda item: -item[1]):
-                geneFile.write("%-20s%d\n" % item)
-            
-            geneFile.write("\n\n")
-            geneFile.write("%-20s%d\n" % ("Other Genes:",len(listC)))
-            geneFile.write("---------------------\n")
-            
-            slist = []
-            for gene in listC:
-                
-                count = 0
-                for studyId in gwasDB.__studyByTrait[trait]:
-                    if studyId in gwasDB.__studyGenes:
-                        if gene in gwasDB.__studyGenes[studyId]:
-                            count+=1
-                slist.append((gene,count))
-                
-            for item in sorted(slist, key=lambda item: -item[1]):
-                geneFile.write("%-20s%d\n" % item)
-                
-            geneFile.close()
-            
-            
-        a = len(listA)
-        b = len(genes - traitGenes)
-        c = len(listC)
-        d = len(geneDB.__approved_symbols - (traitGenes | genes))
-        
-        
-        
-        chisq = geneUtils.contingentChiSquare(a,b,c,d)
-        pvalue = stats.chisqprob(chisq, 1)
-        
-        if len(trait) > 48:
-            trait = trait[0:45] + "..."
-        
-        probabilities.append((trait, str(a), str(len(traitGenes)), "%.2f" % (chisq), "%.10f" % (pvalue)))
-        
-        #       tG    ntG
-        #  RE    a      b
-        # nRE    c      d
-        
-    
-    probabilities = sorted(probabilities, key=lambda item: -int(item[1]))
-    
-    ofile.write("%-50s%5s%8s%15s%15s\n" % ("Disease/Trait", "#RE", "#Genes", "chi-square", "p-value"))
-    ofile.write("---------------------------------------------------------------------------------------------\n")
-    for entry in probabilities:
-        ofile.write("%-50s%5s / %5s%15s%15s\n" % entry)
-        
-    ofile.close()
-    return traitSet
 
 if __name__ == "__main__":
     
@@ -286,12 +155,49 @@ if __name__ == "__main__":
     gwasWithoutCG = gwasDB.__geneSet - studyGenes
     
     
+    # chi-square contingency table for gwas and RE
+    
+    a1 = len(commonGenes)
+    b1 = len(gwasWithoutCG)
+    c1 = len(cgWithoutGWAS)
+    d1 = len( geneDB.__approved_symbols - (studyGenes | gwasDB.__geneSet) )
+    chisq1 = geneUtils.contingentChiSquare(a,b,c,d)
+    pvalue1 = stats.chisqprob(chisq, 1)
+    
+    
+    a2 = len( studyGenes & drugDB.__geneSet )
+    b2 = len( drugDB.__geneSet - studyGenes )
+    c2 = len( studyGenes - drugDB.__geneSet )
+    d2 = len( geneDB.__approved_symbols - ( studyGenes | drugDB.__geneSet ) )
+    chisq2  = geneUtils.contingentChiSquare(a,b,c,d)
+    pvalue2 = stats.chisqprob(chisq, 1)
+    
+    
+    
+    commonDrugTargets = drugDB.__geneSet & studyGenes
+    gwas_drugbank_overlap=gwasDB.__geneSet & drugDB.__geneSet
+    
+    a3 = len( gwas_drugbank_overlap )
+    b3 = len( drugDB.__geneSet - gwasDB.__geneSet )
+    c3 = len( gwasDB.__geneSet - drugDB.__geneSet )
+    d3 = len( geneDB.__approved_symbols - ( drugDB.__geneSet | gwasDB.__geneSet ) )
+    chisq3  = geneUtils.contingentChiSquare(a,b,c,d)
+    pvalue3 = stats.chisqprob(chisq, 1)
+    
+    
+    # start preparing HTML reports
+    
     if not os.path.exists("results" + os.sep + "html"):
         os.mkdir("results" + os.sep + "html")
         os.mkdir("results" + os.sep + "html" + os.sep + "genelists")
         os.mkdir("results" + os.sep + "html" + os.sep + "traitlists")
+        os.mkdir("results" + os.sep + "html" + os.sep + "DAVID")
+        os.system("cp %s %s" % ("html" + os.sep + "genereport.css", "results" + os.sep + "html")
+        os.system("cp %s %s" % ("html" + os.sep + "DAVID_" + gene_frequency_filter + os.sep + "*", "results" + os.sep + "html" + os.sep + "DAVID")
     
     # make index.html
+    
+    # Report data set properties
     
     indexpage = htmltools.createPage("Rapidly Evolving Gene Meta-Analysis Report")
     
@@ -301,104 +207,56 @@ if __name__ == "__main__":
     indexpage.div("Drugbank drug target proteins loaded:           %d".replace(" ", "&nbsp;") % (len(drugDB.__geneSet)),class_="console")
     indexpage.div("GWAS Genes indicated in disease studies:        %d".replace(" ", "&nbsp;") % (len(gwasDB.__geneSet)),class_="console")
     
-    a = len(commonGenes)
-    b = len(gwasWithoutCG)
-    c = len(cgWithoutGWAS)
-    d = len( geneDB.__approved_symbols - (studyGenes | gwasDB.__geneSet) )
-    chisq = geneUtils.contingentChiSquare(a,b,c,d)
-    pvalue = stats.chisqprob(chisq, 1)
     
-    indexpage.div.open(class_="reportsquare")
-    htmltools.createChiTable(indexpage, "GWAS Overlap with Rapidly Evolving Geneset:", "GWAS", "RE", a, b, c, d, chisq, pvalue)
+    # report gwas, RE overlap chi matrix
+    
+    htmltools.createChiTable(indexpage, "GWAS Overlap with Rapidly Evolving Geneset:", "GWAS", "RE", a1, b1, c1, d1, chisq1, pvalue1)
     
     indexpage.div.open(class_="links")
     indexpage.a("Trait Report", href="gwas_traits.html")
     indexpage.a("Gene Listing", href="gwas_genes.html")
     
-    if gene_frequency_filter == 1:
+    if os.path.exists("results" + os.sep + "html" + os.sep + "DAVID" + os.sep + "david_gwas_common.xhtml"):
         indexpage.br()
         indexpage.a("DAVID Results", href="DAVID/david_gwas_common.xhtml")
         
-        
+    indexpage.div.close()
     indexpage.div.close()
     
-    indexpage.div.close()
     
-    print "\n\n----------GWAS Results----------"
-    print "Test Matrix:       %5s   %5s" % ("RE", "nRE")
-    print "             GWAS  %5s   %5s" % (str(a), str(b))
-    print "            nGWAS  %5s   %5s" % (str(c), str(d))
-    print "Chi statistic:    %.2f" % (chisq)
-    print "P-value:          %f" % (pvalue)
-    print "--------------------------------"
-    
-    
-    a = len( studyGenes & drugDB.__geneSet )
-    b = len( drugDB.__geneSet - studyGenes )
-    c = len( studyGenes - drugDB.__geneSet )
-    d = len( geneDB.__approved_symbols - ( studyGenes | drugDB.__geneSet ) )
-    chisq  = geneUtils.contingentChiSquare(a,b,c,d)
-    pvalue = stats.chisqprob(chisq, 1)
+    # report drugbank, RE overlap chi matrix
     
     indexpage.div.open(class_="reportsquare")
-    htmltools.createChiTable(indexpage, "Drugbank Overlap with Rapidly Evolving Geneset:", "Drug", "RE", a, b, c, d, chisq, pvalue)
+    htmltools.createChiTable(indexpage, "Drugbank Overlap with Rapidly Evolving Geneset:", "Drugbank", "RE", a2, b2, c2, d2, chisq2, pvalue2)
     
     indexpage.div.open(class_="links")
     indexpage.a("Trait Report", href="overlap_traits.html")
     indexpage.a("Gene Listing", href="drugbank_genes.html")
     
-    if gene_frequency_filter == 1:
+    if os.path.exists("results" + os.sep + "html" + os.sep + "DAVID" + os.sep + "david_drugbank_common.xhtml"):
         indexpage.br()
         indexpage.a("DAVID Results", href="DAVID/david_drugbank_common.xhtml")
     
     indexpage.div.close()
-    
     indexpage.div.close()
     
-    print "\n\n--------Drugbank Results--------"
-    print "Test Matrix:       %5s   %5s" % ("RE", "nRE")
-    print "             Drug  %5s   %5s" % (str(a), str(b))
-    print "            nDrug  %5s   %5s" % (str(c), str(d))
-    print "Chi statistic:    %.2f" % (chisq)
-    print "P-value:          %f" % (pvalue)
-    print "--------------------------------"
     
-    commonDrugTargets = drugDB.__geneSet & studyGenes
-    
-    gwas_drugbank_overlap=gwasDB.__geneSet & drugDB.__geneSet
-    a = len( gwas_drugbank_overlap )
-    b = len( drugDB.__geneSet - gwasDB.__geneSet )
-    c = len( gwasDB.__geneSet - drugDB.__geneSet )
-    d = len( geneDB.__approved_symbols - ( drugDB.__geneSet | gwasDB.__geneSet ) )
-    chisq  = geneUtils.contingentChiSquare(a,b,c,d)
-    pvalue = stats.chisqprob(chisq, 1)
+    # report drugbank, GWAS overlap chi matrix
     
     indexpage.div.open(class_="reportsquare")
-    htmltools.createChiTable(indexpage, "GWAS Overlap with Drugbank:", "Drugbank", "GWAS", a, b, c, d, chisq, pvalue)
+    htmltools.createChiTable(indexpage, "GWAS Overlap with Drugbank:", "Drugbank", "GWAS", a3, b3, c3, d3, chisq3, pvalue3)
     
     indexpage.div.open(class_="links")
-    indexpage.a("Trait Report", href="drugbank_traits.html", style="align:left")
-    indexpage.a("Gene Listing", href="drugbank_gwas_genes.html", style="align:right")
+    indexpage.a("Trait Report", href="drugbank_traits.html")
+    indexpage.a("Gene Listing", href="drugbank_gwas_genes.html")
     
-    if gene_frequency_filter == 1:
+    if os.path.exists("results" + os.sep + "html" + os.sep + "DAVID" + os.sep + "david_drugbank_gwas_common.xhtml"):
         indexpage.br()
         indexpage.a("DAVID Results", href="DAVID/david_drugbank_gwas_common.xhtml")
     
     indexpage.div.close()
-    
     indexpage.div.close()
     
-    
-    
-    print "\n\n--------Combined Results--------"
-    print "Overlap (GWAS / Drugbank):        "
-    print "Test Matrix:       %5s   %5s" % ("GWAS", "nGWAS")
-    print "             Drug  %5s   %5s" % (str(a), str(b))
-    print "            nDrug  %5s   %5s" % (str(c), str(d))
-    print "Chi statistic:    %.2f" % (chisq)
-    print "P-value:          %f" % (pvalue)
-    print "--------------------------------"
-    print ""
     
     overlap = commonGenes & studyGenes & drugDB.__geneSet
     
@@ -407,49 +265,12 @@ if __name__ == "__main__":
     indexpage.add("Total overlap of drugbank, GWAS, and Rapidly Evolving geneset: ")
     indexpage.a(str(len(overlap)), href="all_genes.html")
     
-    if gene_frequency_filter == 1: 
+    if os.path.exists("results" + os.sep + "html" + os.sep + "DAVID" + os.sep + "david_all.xhtml"):
         indexpage.br()
         indexpage.a("DAVID Results", href="DAVID/david_all.xhtml")
     
     indexpage.p.close()
-    
-    
-    
     indexpage.div.close()
-    
-    print "Overlap (Everything):      %5s" % (str(len(overlap)))
-    print "--------------------------------"
-    
-    
-    writeGeneListToFile(gwas_drugbank_overlap, "results\\common_genes_gwas_drugbank.txt")
-    
-    writeGeneListToFile(overlap, "results\\common_genes_all.txt")
-    writeGeneListToFileWithGWASFreq(overlap, "results\\common_genes_all_freq.txt")
-    
-    print "\n\nWriting common GWAS genes..."
-    writeGeneListToFile(commonGenes, "results\\common_genes_gwas.txt")
-    writeGeneListToFileWithGWASFreq(commonGenes, "results\\common_genes_gwas_freq.txt")
-    
-    print "\n\nWriting common GWAS gene trait frequencies..."
-    gwas_traits = writeTraitFrequenciesToFile(studyGenes, "results\\gwas_trait_file.txt", "results\\geneLists", pfilter_cutoff)
-        
-    print "\n\nWriting exceptional genes..."
-    writeGeneListToFile(cgWithoutGWAS, "results\\excepted_genes_gwas.txt")
-    
-    print "\n\nWriting common Drugbank genes..."
-    writeGeneListToFile(commonDrugTargets, "results\\common_genes_drugbank.txt")
-    
-    drug_traits = writeTraitFrequenciesToFile(gwasDB.__geneSet & drugDB.__geneSet, "results\\drugbank_trait_file.txt", 0, pfilter_cutoff)
-    
-    print "\n\nWriting common Drugbank gene trait frequencies..."
-    all_traits = writeTraitFrequenciesToFile(commonDrugTargets, "results\\all_trait_file.txt", 0, pfilter_cutoff)
-    
-    print "\n\n-----------------------------"
-    print "GWAS Traits:        ", len(gwas_traits)
-    print "Target Traits:      ", len(drug_traits)
-    print "All traits:         ", len(all_traits)
-    print "-----------------------------\n"
-    printList(sorted(list(all_traits)), columns=4, width=35)
     
     htmltools.endPage(indexpage)
     htmltools.savePage(indexpage, "results"+os.sep+"html"+os.sep+"index.html")
