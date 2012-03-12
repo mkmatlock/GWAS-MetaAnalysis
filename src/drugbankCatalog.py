@@ -10,8 +10,8 @@ __drugCatalogue = pyCSV()
 __geneSet = set([])
 __geneNames = {}
 __drugDict = {}
-
 __drugs = {}
+
 
 def initDruglist(drug_file):
     global __DEBUG
@@ -27,10 +27,10 @@ def initDruglist(drug_file):
         drug_link = __drugCatalogue.get(r, 18)
         
         link = drug_link
-        if drug_link == None or drug_link.strip() == "":
+        if link == None or link.strip() == "":
             link = wiki_link
-        if wiki_link == None:
-            link = ""
+        if link.strip() == "":
+            link = None
         
         __drugs[db_id] = (db_name, link)
 
