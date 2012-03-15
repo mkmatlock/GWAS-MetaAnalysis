@@ -32,12 +32,15 @@ def pageDescription( page, desc ):
     page.div("Description:", id="dheader")
     page.div(desc, id="description")
                
-def createChiTable(page, name, cat1, cat2, a, b, c, d, chisq, pvalue):
+def createChiTable(page, name, cat1, cat2, a, b, c, d, chisq, pvalue, oddsratio,
+        kappa):
     page.div(name,class_="header")
     page.div.open(class_="chireport")
     page.p("Test Matrix:")
     createTable(page, [["in "+cat1, a, b],["not in "+cat1, c, d]], ["","in "+cat2,"not in "+cat2], "chiheader", ["chirow1","chirow2"], ["chicol1","chicol2","chicol3"], None, "chimatrix")
-    createTable(page, [["Chi statistic", "%.2f" % (chisq)],["P-value", "%.7f" % (pvalue)]], col_classes=["name", "value"], table_cls = "chireportstats")
+    createTable(page, [["Chi statistic", "%.2f" % (chisq)],["P-value", "%.7f" %
+        (pvalue)], ["Odds-Ratio", "%.1f" % (oddsratio)], ["Kappa Statistic",
+        "%.4f" % (kappa)]], col_classes=["name", "value"], table_cls = "chireportstats")
     page.div.close()
     
     

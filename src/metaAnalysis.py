@@ -38,10 +38,10 @@ def computeTraitChiSquares(genes, pfilter):
         c = len(listC)
         d = len(geneDB.__approved_symbols - (traitGenes | genes))
         
-        chisq = geneUtils.contingentChiSquare(a,b,c,d)
+        chisq, oddsratio, kappa = geneUtils.contingentChiSquare(a,b,c,d)
         pvalue = stats.chisqprob(chisq, 1)
         
-        traitChi[trait] = (a, chisq, pvalue, len(traitGenes))
+        traitChi[trait] = (a, chisq, oddsratio, kappa, pvalue, len(traitGenes))
     
     return traitChi
     
@@ -62,7 +62,7 @@ def writeGenePage(filename, title, desc, total, geneTable):
     
     htmltools.endPage(genepage)
     htmltools.savePage(genepage, filename)
-
+ 
 def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
     traitpage = htmltools.createPage(title)
     htmltools.pageDescription(traitpage, desc)
@@ -72,20 +72,21 @@ def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
     traitTable = []
     
     for trait in traitChi:
-        (cnt,chisq,pvalue,numgenes)=traitChi[trait]
-                
+        (cnt, chisq, oddsratio, kappa, pvalue,numgenes)=traitChi[trait]
+        
         translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
         
         if len(trait) > 40:
             trait = trait[:40] + "..."
         alink = "<a href=\"traitlists/%s.html\">%s</a>" % (translate, trait)
         
-        entry = [alink, cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue)]
+        entry = [alink, cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue), "%.1f" % (oddsratio), "%.4f" % (kappa)]
         traitTable.append(entry)
         
     traitTable = sorted(traitTable, key=lambda item: -item[1])
     
-    htmltools.createTable(traitpage, traitTable, ["Disease/Trait", "# RE Genes", "# Trait Genes", "chi-square", "p-value"], "traitlisthead", None, ["traitcol", "recol", "genecol", "chicol","pcol"], "traittable", None)
+    htmltools.createTable(traitpage, traitTable, ["Disease/Trait", "# RE Genes", "# Trait Genes", "chi-square", "p-value", "odds ratio", "kappa"], 
+            "traitlisthead", None, ["traitcol", "recol", "genecol", "chicol", "pcol", "oddscol", "kappacol"], "traittable", None)
     htmltools.endPage(traitpage)
     htmltools.savePage(traitpage, filename)
     
@@ -151,20 +152,22 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
         c = len(traitGenes - RE_genes)
         d = len(geneDB.__approved_symbols - (traitGenes | RE_genes))
         
-        chisq = geneUtils.contingentChiSquare(a,b,c,d)
+        chisq, oddsratio, kappa = geneUtils.contingentChiSquare(a,b,c,d)
         pvalue = stats.chisqprob(chisq, 1)
         
-        __traitMetaAnalysis[trait]['RE_chi'] = (a, b, c, d, chisq, pvalue)
+        __traitMetaAnalysis[trait]['RE_chi'] = (a, b, c, d, chisq, pvalue,
+                oddsratio, kappa)
         
         a = len(traitGenes & drug_genes)
         b = len(drug_genes - traitGenes)
         c = len(traitGenes - drug_genes)
         d = len(geneDB.__approved_symbols - (traitGenes | drug_genes))
         
-        chisq = geneUtils.contingentChiSquare(a,b,c,d)
+        chisq, oddsratio, kappa = geneUtils.contingentChiSquare(a,b,c,d)
         pvalue = stats.chisqprob(chisq, 1)
         
-        __traitMetaAnalysis[trait]['drugbank_chi'] = (a, b, c, d, chisq, pvalue)
+        __traitMetaAnalysis[trait]['drugbank_chi'] = (a, b, c, d, chisq,
+                pvalue, oddsratio, kappa)
         
         __traitMetaAnalysis[trait]['geneset_size'] = len(traitGenes)
 
@@ -225,12 +228,17 @@ def createTraitListingsHTML(traitListDir):
         
         # two of these
         
-        htmltools.createChiTable(traitpage, "Overlap with rapidly evolving genes:", "RE", "trait", chi_RE[0], chi_RE[1], chi_RE[2], chi_RE[3], chi_RE[4], chi_RE[5])
+        htmltools.createChiTable(traitpage, "Overlap with rapidly evolving genes:", "RE", "trait", chi_RE[0], chi_RE[1], chi_RE[2], 
+                chi_RE[3], chi_RE[4], chi_RE[5], chi_RE[6], chi_RE[7])
         
-        htmltools.createChiTable(traitpage, "Overlap with drugbank genes:", "Drugbank", "trait", chi_Drugbank[0], chi_Drugbank[1], chi_Drugbank[2], chi_Drugbank[3], chi_Drugbank[4], chi_Drugbank[5])
+        htmltools.createChiTable(traitpage, "Overlap with drugbank genes:",
+                "Drugbank", "trait", chi_Drugbank[0], chi_Drugbank[1],
+                chi_Drugbank[2], chi_Drugbank[3], chi_Drugbank[4],
+                chi_Drugbank[5], chi_Drugbank[6], chi_Drugbank[7])
         
         traitpage.div("Gene Lists:", class_="header")
         
+
         traitpage.div("Trait genes indicated as rapidly evolving: ", class_="description")
         createGeneListTable(traitpage, RE_proteins)
         
@@ -360,7 +368,7 @@ if __name__ == "__main__":
     b1 = len(gwasWithoutCG)
     c1 = len(cgWithoutGWAS)
     d1 = len( geneDB.__approved_symbols - (studyGenes | gwasDB.__geneSet) )
-    chisq1 = geneUtils.contingentChiSquare(a1,b1,c1,d1)
+    chisq1, oddsratio1, kappa1 = geneUtils.contingentChiSquare(a1,b1,c1,d1)
     pvalue1 = stats.chisqprob(chisq1, 1)
     
     
@@ -371,7 +379,7 @@ if __name__ == "__main__":
     b2 = len( drugDB.__geneSet - studyGenes )
     c2 = len( studyGenes - drugDB.__geneSet )
     d2 = len( geneDB.__approved_symbols - ( studyGenes | drugDB.__geneSet ) )
-    chisq2  = geneUtils.contingentChiSquare(a2,b2,c2,d2)
+    chisq2, oddsratio2, kappa2  = geneUtils.contingentChiSquare(a2,b2,c2,d2)
     pvalue2 = stats.chisqprob(chisq2, 1)
     
     
@@ -383,7 +391,7 @@ if __name__ == "__main__":
     b3 = len( drugDB.__geneSet - gwasDB.__geneSet )
     c3 = len( gwasDB.__geneSet - drugDB.__geneSet )
     d3 = len( geneDB.__approved_symbols - ( drugDB.__geneSet | gwasDB.__geneSet ) )
-    chisq3  = geneUtils.contingentChiSquare(a3,b3,c3,d3)
+    chisq3, oddsratio3, kappa3  = geneUtils.contingentChiSquare(a3,b3,c3,d3)
     pvalue3 = stats.chisqprob(chisq3, 1)
     
     
@@ -423,7 +431,8 @@ if __name__ == "__main__":
     
     # report gwas, RE overlap chi matrix
     
-    htmltools.createChiTable(indexpage, "GWAS Overlap with Rapidly Evolving Geneset:", "GWAS", "RE", a1, b1, c1, d1, chisq1, pvalue1)
+    htmltools.createChiTable(indexpage, "GWAS Overlap with Rapidly Evolving Geneset:", "GWAS", "RE", a1, b1, c1, d1, chisq1, pvalue1,
+            oddsratio1, kappa1)
     
     indexpage.div.open(class_="links")
     indexpage.a("Trait Report", href="gwas_traits.html")
@@ -439,7 +448,7 @@ if __name__ == "__main__":
     # report drugbank, RE overlap chi matrix
     
     indexpage.div.open(class_="reportsquare")
-    htmltools.createChiTable(indexpage, "Drugbank Overlap with Rapidly Evolving Geneset:", "Drugbank", "RE", a2, b2, c2, d2, chisq2, pvalue2)
+    htmltools.createChiTable(indexpage, "Drugbank Overlap with Rapidly Evolving Geneset:", "Drugbank", "RE", a2, b2, c2, d2, chisq2, pvalue2, oddsratio2, kappa2)
     
     indexpage.div.open(class_="links")
     indexpage.a("Trait Report", href="overlap_traits.html")
@@ -455,7 +464,9 @@ if __name__ == "__main__":
     # report drugbank, GWAS overlap chi matrix
     
     indexpage.div.open(class_="reportsquare")
-    htmltools.createChiTable(indexpage, "GWAS Overlap with Drugbank:", "Drugbank", "GWAS", a3, b3, c3, d3, chisq3, pvalue3)
+    htmltools.createChiTable(indexpage, "GWAS Overlap with Drugbank:",
+            "Drugbank", "GWAS", a3, b3, c3, d3, chisq3, pvalue3, 
+            oddsratio3, kappa3)
     
     indexpage.div.open(class_="links")
     indexpage.a("Trait Report", href="drugbank_traits.html")

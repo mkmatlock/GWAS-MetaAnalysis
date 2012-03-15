@@ -6,7 +6,21 @@ __DEBUG=0
 
 
 def contingentChiSquare(a,b,c,d):
-    return math.pow(a*d-b*c,2) * (a + b + c + d) / ((a+b)*(c+d)*(b+d)*(a+c))
+    chisq      = math.pow(a*d-b*c,2) * (a + b + c + d) / ((a+b)*(c+d)*(b+d)*(a+c))
+
+    if b*c == 0:
+        oddsratio = 0
+    else:
+        oddsratio  = float(a * d) / float(b * c)
+    
+    t = float(a + b + c + d)
+    pr_a = (a + d) / t
+    pr_p = (a + b) / t * (a + c) / t
+    pr_n = (b + d) / t * (c + d) / t
+    pr_e = pr_p + pr_n
+    kappa = ( pr_a - pr_e ) / ( 1 - pr_e )
+    
+    return chisq, oddsratio, kappa
     
 replacement_dict = {"hat":"hat1", "cdkal":"cdkal1"}
 
