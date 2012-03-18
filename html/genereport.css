@@ -91,6 +91,14 @@
     color:white;
 }
 
+.traittable .oddscol {
+    text-align:right;
+}
+
+.traittable .kappacol {
+    text-align:right;
+}
+
 
 /* Gene list formatting */
 
