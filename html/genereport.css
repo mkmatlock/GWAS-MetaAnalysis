@@ -19,12 +19,16 @@
     padding-left: 10px;
     padding-top: 10px;
     padding-bottom:10px;
+    font-size: 18px;
+    text-align: center;
 }
 
 .description {
     padding-left: 10px;
     padding-top: 10px;
     padding-bottom:10px;
+    font-size: 18px;
+    text-align:center;
 }
 
 .header {
@@ -47,6 +51,31 @@
 }
 
 /* DAVID results formatting */
+
+/* drug list formatting */
+.invisible {
+    table-layout:auto;
+    border:none;
+    vertical-align:top;
+    margin:none;
+}
+
+.invisible td {
+    vertical-align:top;
+    width:400px;
+}
+
+.druglist {
+}
+
+.druglist ul {
+    padding-top:0px;
+    text-align:left;
+    margin-top: 10px;
+    margin-left:25px;
+    margin-right:25px;
+    width:250px;
+}
 
 /* Trait table formatting */
 .traittable {
@@ -97,10 +126,13 @@
 
 .traittable .kappacol {
     text-align:right;
+    background:#9999FF;
+    color:white;
 }
 
 
 /* Gene list formatting */
+
 
 .genetable {
     text-align:left;
@@ -109,12 +141,21 @@
     border-color:white;
     border-width:3px;
     table-layout:auto;
-    margin-left:275px;
-    margin-right:275px;
-    width:250px;
+    margin-left:225px;
+    margin-right:225px;
+    width:350px;
     
     margin-bottom:10px;
     margin-top:10px;
+}
+
+.invisible .genetable {
+    margin-left:25px;
+    margin-right:25px;
+    width:350px
+}
+.genetable .drugcol {
+    text-align:right;
 }
 
 .genetable .genelisthead {

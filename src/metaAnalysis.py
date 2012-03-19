@@ -53,12 +53,16 @@ def writeGenePage(filename, title, desc, total, geneTable):
     
     newTable=[]
     for row in geneTable:
+        drugcount = 0
+        if row[0] in drugDB.__drugDict:
+            drugcount = len(drugDB.__drugDict[row[0]])
+
         if os.path.exists(os.sep.join(["results","html","genelists",row[0]+".html"])):
-            newTable.append(["<a href=\"genelists/%s.html\">%s</a>" % (row[0], geneDB.__original_names[row[0]]), row[1]])
+            newTable.append(["<a href=\"genelists/%s.html\">%s</a>" % (row[0], geneDB.__original_names[row[0]]), row[1], drugcount])
         else:
-            newTable.append([geneDB.__original_names[row[0]], row[1]])
+            newTable.append([geneDB.__original_names[row[0]], row[1], drugcount])
     
-    htmltools.createTable(genepage, newTable, ["Gene","#Associated Traits"], "genelisthead", None, ["genecol","traitcol"],"genetable",None)
+    htmltools.createTable(genepage, newTable, ["Gene","#Associated Traits", "#Targeted Drugs"], "genelisthead", None, ["genecol","traitcol", "drugcol"],"genetable",None)
     
     htmltools.endPage(genepage)
     htmltools.savePage(genepage, filename)
@@ -76,8 +80,8 @@ def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
         
         translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
         
-        if len(trait) > 40:
-            trait = trait[:40] + "..."
+        if len(trait) > 38:
+            trait = trait[:35] + "..."
         alink = "<a href=\"traitlists/%s.html\">%s</a>" % (translate, trait)
         
         entry = [alink, cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue), "%.1f" % (oddsratio), "%.4f" % (kappa)]
@@ -90,6 +94,36 @@ def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
     htmltools.endPage(traitpage)
     htmltools.savePage(traitpage, filename)
     
+def computeTraitDrugLists(RE_genes, drug_genes, pfilter_cutoff):
+    
+    traitSet = set(gwasDB.__studyByTrait.keys())
+    
+    for trait in traitSet:
+        traitGenes = gwasDB.getGenesForTrait(trait, pfilter_cutoff)
+        
+        if len(traitGenes) == 0:
+            continue
+        
+        RE_drugs = []
+        other_drugs = []
+        drug_counts_by_gene = {}
+        
+        for gene in traitGenes & RE_genes:
+            drug_counts_by_gene[gene] = 0
+            if gene in drugDB.__drugDict:
+                for drug in drugDB.__drugDict[gene]:
+                    RE_drugs.append(drug)
+                drug_counts_by_gene[gene] += len(drugDB.__drugDict[gene])
+
+        for gene in ((traitGenes & drug_genes) - RE_genes):
+            drug_counts_by_gene[gene] = 0
+            if gene in drugDB.__drugDict:
+                for drug in drugDB.__drugDict[gene]:
+                    other_drugs.append(drug)
+                drug_counts_by_gene[gene] += len(drugDB.__drugDict[gene])
+        __traitMetaAnalysis[trait]['RE_drugs'] = RE_drugs
+        __traitMetaAnalysis[trait]['other_drugs'] = other_drugs
+        __traitMetaAnalysis[trait]['drug_counts'] = drug_counts_by_gene
 
 
 def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
@@ -97,7 +131,7 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
     traitSet = set(gwasDB.__studyByTrait.keys())
     
     for trait in traitSet:
-        traitGenes = gwasDB.getGenesForTrait(trait,pfilter_cutoff)
+        traitGenes = gwasDB.getGenesForTrait(trait, pfilter_cutoff)
         
         if len(traitGenes) == 0: 
             continue
@@ -194,14 +228,18 @@ def createGeneListTable(page, genes, verify=None):
     for pair in genes:
         geneSym, l = pair
         total += l
-        
-        if verify==None or geneSym in verify:
-            output_list.append(["<a href=\"../genelists/%s.html\" > %s </a>" % (geneSym, geneDB.__original_names[geneSym]), l])
+        if geneSym in drugDB.__drugDict:
+            drugs = len(drugDB.__drugDict[geneSym])
         else:
-            output_list.append([geneDB.__original_names[geneSym], l])
+            drugs = 0
+        if verify==None or geneSym in verify:
+            output_list.append(["<a href=\"../genelists/%s.html\" > %s </a>" % (geneSym, geneDB.__original_names[geneSym]), l, drugs])
+        else:
+            output_list.append([geneDB.__original_names[geneSym], l, drugs])
         
     output_list = sorted(output_list, key=lambda item: -item[1])
-    htmltools.createTable(page, output_list, ["Gene","#Associated Traits"], "genelisthead", None, ["genecol","traitcol"],"genetable",None)
+    htmltools.createTable(page, output_list, ["Gene", "#Associated Traits", "#Targeted Drugs"], "genelisthead", None, ["genecol","traitcol", "drugcol"],"genetable",None)
+    
     
     
 def createTraitListingsHTML(traitListDir):
@@ -236,9 +274,12 @@ def createTraitListingsHTML(traitListDir):
                 chi_Drugbank[2], chi_Drugbank[3], chi_Drugbank[4],
                 chi_Drugbank[5], chi_Drugbank[6], chi_Drugbank[7])
         
+        traitpage.table.open(class_="invisible")
+        traitpage.tr.open()
+
+        traitpage.td.open()
         traitpage.div("Gene Lists:", class_="header")
         
-
         traitpage.div("Trait genes indicated as rapidly evolving: ", class_="description")
         createGeneListTable(traitpage, RE_proteins)
         
@@ -247,6 +288,49 @@ def createTraitListingsHTML(traitListDir):
         
         traitpage.div("Other trait genes: ", class_="description")
         createGeneListTable(traitpage, other_proteins)
+        
+        traitpage.td.close()
+        traitpage.td.open()
+
+        traitpage.div("Drug Lists:", class_="header")
+        
+        druglistlen = len(__traitMetaAnalysis[trait]['RE_drugs'])
+        traitpage.div("%d drugs targeting associated rapidly evolving proteins" % (druglistlen), class_="description")
+        
+        traitpage.div.open(class_="druglist")
+        traitpage.ul.open()
+        for drug in __traitMetaAnalysis[trait]['RE_drugs']:
+            link = "http://www.drugbank.ca/drugs/%s" % (drug)
+            if drug not in drugDB.__drugs:
+                traitpage.li(oneliner.a(drug, href=link))
+            elif drugDB.__drugs[drug][1] != None:
+                traitpage.li("<a href = \"%s\">%s</a> [<a href=\"%s\">alt</a>]" % (link, drugDB.__drugs[drug][0], drugDB.__drugs[drug][1]))
+            else:
+                traitpage.li(oneliner.a(drugDB.__drugs[drug][0], href=link))
+        traitpage.ul.close()
+        traitpage.div.close()
+        
+        druglistlen = len(__traitMetaAnalysis[trait]['other_drugs'])
+        traitpage.div("%d Drugs targeting other proteins" % (druglistlen), class_="description")
+        
+
+        traitpage.div.open(class_="druglist")
+        traitpage.ul.open()
+        for drug in __traitMetaAnalysis[trait]['other_drugs']:
+            link = "http://www.drugbank.ca/drugs/%s" % (drug)
+            if drug not in drugDB.__drugs:
+                traitpage.li(oneliner.a(drug, href=link))
+            elif drugDB.__drugs[drug][1] != None:
+                traitpage.li("<a href = \"%s\">%s</a> [<a href=\"%s\">alt</a>]" % (link, drugDB.__drugs[drug][0], drugDB.__drugs[drug][1]))
+            else:
+                traitpage.li(oneliner.a(drugDB.__drugs[drug][0], href=link))
+        traitpage.ul.close()
+        traitpage.div.close()
+
+
+        traitpage.td.close()
+        traitpage.tr.close()
+        traitpage.table.close()
         
         htmltools.savePage(traitpage, traitListFilename)
     
@@ -271,24 +355,23 @@ def createGeneListingsHTML(geneListDir):
             numgenes  = __traitMetaAnalysis[trait]['geneset_size']
             translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
             
-            if len(trait) > 40:
-                trait = trait[:40] + "..."
+            if len(trait) > 38:
+                trait = trait[:35] + "..."
             traitTable.append(["<a href=\"../traitlists/%s.html\">%s</a>" % (translate,trait), cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue)])
             
         genePage.div("Gene %s, total traits: %d" % (geneDB.__original_names[gene],len(traitTable)), class_="header")
         
         htmltools.createTable(genePage, traitTable, ["Disease/Trait", "#RE Genes", "#Trait Genes", "Chi-square", "p-value"], "traitlisthead", None, ["traitcol","recol", "genecol", "chicol","pcol"], "traittable", None)
         
-        
         # Create drug bank links
         
         
         if gene not in drugDB.__drugDict:
-            genePage.div("No drugs target gene %s" % (gene), class_="header")
+            genePage.div("No drugs target gene %s" % (geneDB.__original_names[gene]), class_="header")
         else:
             drugbank_size = len(drugDB.__drugDict[gene])
             
-            genePage.div("%d drugs targeting gene %s" % (drugbank_size, gene), class_="header")
+            genePage.div("%d drugs targeting gene %s" % (drugbank_size, geneDB.__original_names[gene]), class_="header")
             
             genePage.div.open(class_="druglist")
             genePage.ul.open()
@@ -297,7 +380,7 @@ def createGeneListingsHTML(geneListDir):
                 if drug not in drugDB.__drugs:
                     genePage.li(oneliner.a(drug, href=link))
                 elif drugDB.__drugs[drug][1] != None:
-                    genePage.li("<a href = \"%s\">%s</a><a href=\"%s\">alt</a>" % (link, drugDB.__drugs[drug][0], drugDB.__drugs[drug][1]))
+                    genePage.li("<a href = \"%s\">%s</a> [<a href=\"%s\">alt</a>]" % (link, drugDB.__drugs[drug][0], drugDB.__drugs[drug][1]))
                 else:
                     genePage.li(oneliner.a(drugDB.__drugs[drug][0], href=link))
             genePage.ul.close()
@@ -501,6 +584,7 @@ if __name__ == "__main__":
     if not skip_listings:
         print "Creating trait listings..."
         computeTraitGeneLists(studyGenes, drugDB.__geneSet, pfilter_cutoff)
+        computeTraitDrugLists(studyGenes, drugDB.__geneSet, pfilter_cutoff)
         createTraitListingsHTML(os.sep.join(["results","html","traitlists"]))
         print "Creating gene listings..."
         createGeneListingsHTML(os.sep.join(["results","html","genelists"]))
