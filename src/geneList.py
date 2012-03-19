@@ -5,24 +5,38 @@ import os
 
 __DEBUG=0
 
-def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0, __ENABLE_GENE_UPDATES=0, __CROSS_MATCH_LEVEL = 1):
+def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0,
+        __ENABLE_GENE_UPDATES=0, __CROSS_MATCH_LEVEL = 1, include_studies = [1,2,3,4,5]):
     global __DEBUG
     
     genesTSV = pyCSV()
     genesTSV.load(filename, "\t")
     
-    bustamante          = [item.lower() for item in geneUtils.columnToList(genesTSV, 1, 2)]
-    vamathevan_human    = [item.lower() for item in geneUtils.columnToList(genesTSV, 3, 2)]
-    kosiol_human        = [item.lower() for item in geneUtils.columnToList(genesTSV, 8, 2)]
+    bustamante = []
+    vamathevan_human = []
+    kosiol_human = []
+
+    if 1 in include_studies:
+        bustamante          = [item.lower() for item in geneUtils.columnToList(genesTSV, 1, 2)]
+    if 2 in include_studies:
+        vamathevan_human    = [item.lower() for item in geneUtils.columnToList(genesTSV, 3, 2)]
+    if 3 in include_studies:
+        kosiol_human        = [item.lower() for item in geneUtils.columnToList(genesTSV, 8, 2)]
     
     conflicts = []
     
-    bakewell, c         = geneUtils.mergeColumns(genesTSV, 12, 13, 2)
-    bakewell = [item.lower() for item in bakewell]
-    conflicts.extend(c)
-    nielsen, c          = geneUtils.mergeColumns(genesTSV, 17, 18, 2)
-    nielsen = [item.lower() for item in nielsen]
-    conflicts.extend(c)
+    bakewell = []
+    nielsen = []
+    
+    if 4 in include_studies:
+        bakewell, c         = geneUtils.mergeColumns(genesTSV, 12, 13, 2)
+        bakewell = [item.lower() for item in bakewell]
+        conflicts.extend(c)
+
+    if 5 in include_studies:
+        nielsen, c          = geneUtils.mergeColumns(genesTSV, 17, 18, 2)
+        nielsen = [item.lower() for item in nielsen]
+        conflicts.extend(c)
     
     # verify gene symbols
     

@@ -46,9 +46,9 @@ def computeTraitChiSquares(genes, pfilter):
     return traitChi
     
 
-def writeGenePage(filename, title, desc, total, geneTable):
+def writeGenePage(output_dir, filename, title, desc, total, geneTable):
     genepage = htmltools.createPage(title)
-    
+
     htmltools.pageDescription(genepage, desc)
     
     newTable=[]
@@ -57,7 +57,7 @@ def writeGenePage(filename, title, desc, total, geneTable):
         if row[0] in drugDB.__drugDict:
             drugcount = len(drugDB.__drugDict[row[0]])
 
-        if os.path.exists(os.sep.join(["results","html","genelists",row[0]+".html"])):
+        if os.path.exists(os.sep.join([output_dir,"genelists",row[0]+".html"])):
             newTable.append(["<a href=\"genelists/%s.html\">%s</a>" % (row[0], geneDB.__original_names[row[0]]), row[1], drugcount])
         else:
             newTable.append([geneDB.__original_names[row[0]], row[1], drugcount])
@@ -395,6 +395,8 @@ if __name__ == "__main__":
     trait_exclude_file = 0
     gene_frequency_filter=1
     skip_listings=0
+    output_dir = os.sep.join(["results", "html"])
+    included_studies = [1,2,3,4,5]
     for i in xrange(1, len(sys.argv)):
         if sys.argv[i] == "--pfilter":
             pfilter_cutoff = float(sys.argv[i+1])
@@ -412,6 +414,12 @@ if __name__ == "__main__":
             skip_listings=1
         elif sys.argv[i] == "--rm-pseudo":
             __EXCLUDE_PSEUDOGENES = 1
+        elif sys.argv[i] == "--rm-study":
+            for item in sys.argv[i+1].split(","):
+                item = item.strip()
+                included_studies.remove(int(item))
+        elif sys.argv[i] == "--output-dir":
+            output_dir = os.sep.join(["results", sys.argv[i+1]])
         elif sys.argv[i].startswith("--"):
             print "Invalid arg:", sys.argv[i]
             sys.exit(1)
@@ -420,7 +428,7 @@ if __name__ == "__main__":
     geneDB.init(os.sep.join(["data","hgnc","hgnc_symbols.txt"]),__EXCLUDE_PSEUDOGENES)
     
     print "\nLoading rapidly evolving proteins..."
-    studyGenes = loadEvolutionaryGenes(os.sep.join(["data","genelists","positive_selection_gene_lists.txt"]),__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES,gene_frequency_filter)
+    studyGenes = loadEvolutionaryGenes(os.sep.join(["data","genelists","positive_selection_gene_lists.txt"]),__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES,gene_frequency_filter, included_studies)
     
     if __EXCLUDE_OLFACTORY_PROTEINS:
         print "\nExcluding olfactory proteins..."
@@ -486,16 +494,16 @@ if __name__ == "__main__":
         os.mkdir("results")
     if not os.path.exists(os.sep.join(["results","log"])):
         os.mkdir(os.sep.join(["results", "log"]))
-    if not os.path.exists(os.sep.join(["results","html"])):
-        os.mkdir(os.sep.join(["results", "html"]))
-        os.mkdir(os.sep.join(["results", "html", "genelists"]))
-        os.mkdir(os.sep.join(["results", "html", "traitlists"]))
-        os.mkdir(os.sep.join(["results", "html", "DAVID"]))
+    if not os.path.exists(os.sep.join([output_dir])):
+        os.mkdir(os.sep.join([output_dir]))
+        os.mkdir(os.sep.join([output_dir, "genelists"]))
+        os.mkdir(os.sep.join([output_dir, "traitlists"]))
+        os.mkdir(os.sep.join([output_dir, "DAVID"]))
         
     print "\nCopying support files..."
         
-    os.system("copy %s %s" % (os.sep.join(["html", "genereport.css"]), os.sep.join(["results", "html"])))
-    os.system("copy %s %s" % (os.sep.join(["html", "DAVID", str(gene_frequency_filter), "*"]), os.sep.join(["results", "html", "DAVID"])))
+    os.system("copy %s %s" % (os.sep.join(["html", "genereport.css"]), output_dir ))
+    os.system("copy %s %s" % (os.sep.join(["html", "DAVID", str(gene_frequency_filter), "*"]), os.sep.join([output_dir, "DAVID"])))
     
     # make index.html
     
@@ -521,7 +529,7 @@ if __name__ == "__main__":
     indexpage.a("Trait Report", href="gwas_traits.html")
     indexpage.a("Gene Listing", href="gwas_genes.html")
     
-    if os.path.exists(os.sep.join(["results", "html", "DAVID", "david_gwas_common.xhtml"])):
+    if os.path.exists(os.sep.join([output_dir, "DAVID", "david_gwas_common.xhtml"])):
         indexpage.br()
         indexpage.a("DAVID Results", href="DAVID/david_gwas_common.xhtml")
         
@@ -537,7 +545,7 @@ if __name__ == "__main__":
     indexpage.a("Trait Report", href="overlap_traits.html")
     indexpage.a("Gene Listing", href="drugbank_genes.html")
     
-    if os.path.exists(os.sep.join(["results", "html", "DAVID", "david_drugbank_common.xhtml"])):
+    if os.path.exists(os.sep.join([output_dir, "DAVID", "david_drugbank_common.xhtml"])):
         indexpage.br()
         indexpage.a("DAVID Results", href="DAVID/david_drugbank_common.xhtml")
     
@@ -555,7 +563,7 @@ if __name__ == "__main__":
     indexpage.a("Trait Report", href="drugbank_traits.html")
     indexpage.a("Gene Listing", href="drugbank_gwas_genes.html")
     
-    if os.path.exists(os.sep.join(["results", "html", "DAVID", "david_drugbank_gwas_common.xhtml"])):
+    if os.path.exists(os.sep.join([output_dir, "DAVID", "david_drugbank_gwas_common.xhtml"])):
         indexpage.br()
         indexpage.a("DAVID Results", href="DAVID/david_drugbank_gwas_common.xhtml")
     
@@ -569,7 +577,7 @@ if __name__ == "__main__":
     indexpage.add("Total overlap of drugbank, GWAS, and Rapidly Evolving geneset: ")
     indexpage.a(str(len(overlap)), href="all_genes.html")
     
-    if os.path.exists(os.sep.join(["results", "html", "DAVID", "david_all.xhtml"])):
+    if os.path.exists(os.sep.join([output_dir, "DAVID", "david_all.xhtml"])):
         indexpage.br()
         indexpage.a("DAVID Results", href="DAVID/david_all.xhtml")
     
@@ -577,7 +585,7 @@ if __name__ == "__main__":
     indexpage.div.close()
     
     htmltools.endPage(indexpage)
-    htmltools.savePage(indexpage, os.sep.join(["results","html","index.html"]))
+    htmltools.savePage(indexpage, os.sep.join([output_dir, "index.html"]))
     
     print ""
     
@@ -585,30 +593,30 @@ if __name__ == "__main__":
         print "Creating trait listings..."
         computeTraitGeneLists(studyGenes, drugDB.__geneSet, pfilter_cutoff)
         computeTraitDrugLists(studyGenes, drugDB.__geneSet, pfilter_cutoff)
-        createTraitListingsHTML(os.sep.join(["results","html","traitlists"]))
+        createTraitListingsHTML(os.sep.join([output_dir, "traitlists"]))
         print "Creating gene listings..."
-        createGeneListingsHTML(os.sep.join(["results","html","genelists"]))
+        createGeneListingsHTML(os.sep.join([output_dir,"genelists"]))
     
     print "Creating referenced HTML gene and trait list reports..."
     
     # write trait frequency tables
-    writeTraitPage(os.sep.join(["results","html","gwas_traits.html"]), "GWAS Traits for Rapidly Evolving Genes", "Listing of disease traits associated with genes in the rapidly evolving geneset", commonGenes, pfilter_cutoff)
-    writeTraitPage(os.sep.join(["results","html","drugbank_traits.html"]), "GWAS Traits for Drugbank Genes", "Listing of disease traits associated with genes in the drugbank targets database", gwasDB.__geneSet & drugDB.__geneSet, pfilter_cutoff)
-    writeTraitPage(os.sep.join(["results","html","overlap_traits.html"]), "GWAS Traits for overlap of RE and Drugbank", "Listing of disease traits associated with genes in the rapidly evolving geneset and the drugbank targets database", overlap, pfilter_cutoff)
+    writeTraitPage(os.sep.join([output_dir,"gwas_traits.html"]), "GWAS Traits for Rapidly Evolving Genes", "Listing of disease traits associated with genes in the rapidly evolving geneset", commonGenes, pfilter_cutoff)
+    writeTraitPage(os.sep.join([output_dir,"drugbank_traits.html"]), "GWAS Traits for Drugbank Genes", "Listing of disease traits associated with genes in the drugbank targets database", gwasDB.__geneSet & drugDB.__geneSet, pfilter_cutoff)
+    writeTraitPage(os.sep.join([output_dir,"overlap_traits.html"]), "GWAS Traits for overlap of RE and Drugbank", "Listing of disease traits associated with genes in the rapidly evolving geneset and the drugbank targets database", overlap, pfilter_cutoff)
     
     # write gene tables
     
     total, geneTable = getGWASFrequencyTable(commonGenes)
-    writeGenePage(os.sep.join(["results","html","gwas_genes.html"]), "Rapidly Evolving Genes found in GWAS Disease Studies", "Listing of rapidly evolving genes found in GWAS.", total, geneTable)
+    writeGenePage(output_dir, os.sep.join([output_dir,"gwas_genes.html"]), "Rapidly Evolving Genes found in GWAS Disease Studies", "Listing of rapidly evolving genes found in GWAS.", total, geneTable)
     
     total, geneTable = getGWASFrequencyTable(commonDrugTargets)
-    writeGenePage(os.sep.join(["results","html","drugbank_genes.html"]), "Rapidly Evolving Genes found in Drugbank", "Listing of rapidly evolving genes found in Drugbank.", total, geneTable)
+    writeGenePage(output_dir, os.sep.join([output_dir,"drugbank_genes.html"]), "Rapidly Evolving Genes found in Drugbank", "Listing of rapidly evolving genes found in Drugbank.", total, geneTable)
     
     total, geneTable = getGWASFrequencyTable(gwas_drugbank_overlap)
-    writeGenePage(os.sep.join(["results","html","drugbank_gwas_genes.html"]), "Drugbank targets found in GWAS Disease Studies", "Listing of Drugbank targets found in GWAS Disease Studies.", total, geneTable)
+    writeGenePage(output_dir, os.sep.join([output_dir,"drugbank_gwas_genes.html"]), "Drugbank targets found in GWAS Disease Studies", "Listing of Drugbank targets found in GWAS Disease Studies.", total, geneTable)
     
     total, geneTable = getGWASFrequencyTable(overlap)
-    writeGenePage(os.sep.join(["results","html","all_genes.html"]), "Rapidly Evolving Genes found in GWAS Disease Studies and Drugbank", "Listing of rapidly evolving genes found in both GWAS and Drugbank.", total, geneTable)
+    writeGenePage(output_dir, os.sep.join([output_dir,"all_genes.html"]), "Rapidly Evolving Genes found in GWAS Disease Studies and Drugbank", "Listing of rapidly evolving genes found in both GWAS and Drugbank.", total, geneTable)
     
     
     
