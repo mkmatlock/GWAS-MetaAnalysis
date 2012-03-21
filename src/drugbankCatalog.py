@@ -3,28 +3,18 @@ from pyFASTA import *
 from geneUtils import *
 from pyCSV import *
 import geneUtils
-<<<<<<< HEAD
-__DEBUG = 2
-=======
 import os
 
 __DEBUG = 0
->>>>>>> html_reporting_refactor
 
 __targetCatalogue = pyCSV()
 __drugCatalogue = pyCSV()
 __geneSet = set([])
 __geneNames = {}
 __drugDict = {}
-<<<<<<< HEAD
-
-__drugs = {}
-
-=======
 __drugs = {}
 
 
->>>>>>> html_reporting_refactor
 def initDruglist(drug_file):
     global __DEBUG
     
@@ -39,17 +29,10 @@ def initDruglist(drug_file):
         drug_link = __drugCatalogue.get(r, 18)
         
         link = drug_link
-<<<<<<< HEAD
-        if drug_link == None or drug_link.strip() == "":
-            link = wiki_link
-        if wiki_link == None:
-            link = ""
-=======
         if link == None or link.strip() == "":
             link = wiki_link
         if link.strip() == "":
             link = None
->>>>>>> html_reporting_refactor
         
         __drugs[db_id] = (db_name, link)
 
@@ -82,11 +65,7 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
             __geneSet.add(geneName)
             __drugDict[geneName] = set([])
     
-<<<<<<< HEAD
-    invalid_file = open("log\\invalid_drugbank.txt",'w')
-=======
     invalid_file = open(os.sep.join(["results","log","invalid_drugbank.txt"]),'w')
->>>>>>> html_reporting_refactor
     for geneName in rejectedSet:
         invalid_file.write(geneName+"\n")
     invalid_file.close()            

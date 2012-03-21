@@ -1,13 +1,5 @@
 import geneVerifier as geneDB
 import math
-<<<<<<< HEAD
-
-__DEBUG=1
-
-
-def contingentChiSquare(a,b,c,d):
-    return math.pow(a*d-b*c,2) * (a + b + c + d) / ((a+b)*(c+d)*(b+d)*(a+c))
-=======
 import os
 
 __DEBUG=0
@@ -29,7 +21,6 @@ def contingentChiSquare(a,b,c,d):
     kappa = ( pr_a - pr_e ) / ( 1 - pr_e )
     
     return chisq, oddsratio, kappa
->>>>>>> html_reporting_refactor
     
 replacement_dict = {"hat":"hat1", "cdkal":"cdkal1"}
 
@@ -129,11 +120,7 @@ def removeInvalidGenes(geneSet):
                 print "Gene:", gene,"is not valid..."
             remove.append(gene)
             
-<<<<<<< HEAD
-    invalid_file = open("log\\invalid_genelist.txt",'w')
-=======
     invalid_file = open(os.sep.join(["results","log","invalid_genelist.txt"]),'w')
->>>>>>> html_reporting_refactor
     for r in remove:
         geneSet.remove(r)
         invalid_file.write(r + "\n")
@@ -168,8 +155,4 @@ def updateGeneSet(geneSet):
         print "\n----------------------------"
         print "Gene Set Update Results:"
         print "Updated:     ", len(remove)
-<<<<<<< HEAD
         print "----------------------------\n"
-=======
-        print "----------------------------\n"
->>>>>>> html_reporting_refactor

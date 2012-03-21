@@ -1,35 +1,6 @@
 from pyCSV import *
 import geneVerifier as geneDB
 import geneUtils
-<<<<<<< HEAD
-
-__DEBUG=1
-__EXCLUDE_OLFACTORY_PROTEINS = 1
-
-def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0, __ENABLE_GENE_UPDATES=0, __CROSS_MATCH_LEVEL = 1, __EXCLUDE_OLFACTORY_PROTEINS = 1):
-    global __DEBUG
-    
-    olfactoryProteins = pyCSV()
-    olfactoryProteins.load("data\\genelists\\olfactory_genes.csv","\t")
-    
-    olfactoryGenes = set([item.lower() for item in geneUtils.columnToList(olfactoryProteins, 1, 1)])
-    
-    genesTSV = pyCSV()
-    genesTSV.load(filename, "\t")
-    
-    bustamante          = [item.lower() for item in geneUtils.columnToList(genesTSV, 1, 2)]
-    vamathevan_human    = [item.lower() for item in geneUtils.columnToList(genesTSV, 3, 2)]
-    kosiol_human        = [item.lower() for item in geneUtils.columnToList(genesTSV, 8, 2)]
-    
-    conflicts = []
-    
-    bakewell, c         = geneUtils.mergeColumns(genesTSV, 12, 13, 2)
-    bakewell = [item.lower() for item in bakewell]
-    conflicts.extend(c)
-    nielsen, c          = geneUtils.mergeColumns(genesTSV, 17, 18, 2)
-    nielsen = [item.lower() for item in nielsen]
-    conflicts.extend(c)
-=======
 import os
 
 __DEBUG=0
@@ -66,7 +37,6 @@ def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0,
         nielsen, c          = geneUtils.mergeColumns(genesTSV, 17, 18, 2)
         nielsen = [item.lower() for item in nielsen]
         conflicts.extend(c)
->>>>>>> html_reporting_refactor
     
     # verify gene symbols
     
@@ -134,20 +104,9 @@ def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0,
             except KeyError:
                 geneCounts[g2] = 1
             
-<<<<<<< HEAD
-    duplicates, tgeneSet = geneUtils.addFilterFrequency(geneCounts, __CROSS_MATCH_LEVEL)
-    ofile = open("log\\geneSetDuplicateFrequency.txt",'w')
-    
-    geneSet = set([])
-    for gene in tgeneSet:
-        if not (__EXCLUDE_OLFACTORY_PROTEINS and gene in olfactoryGenes):
-            geneSet.add(gene)
-            
-=======
     duplicates, geneSet = geneUtils.addFilterFrequency(geneCounts, __CROSS_MATCH_LEVEL)
     ofile = open(os.sep.join(["results","log","geneSetDuplicateFrequency.txt"]),'w')
     
->>>>>>> html_reporting_refactor
     glist = []
     
     for gene in geneCounts:
@@ -173,11 +132,7 @@ def loadEvolutionaryGenes(filename, __ENABLE_GENE_VERIFICATION=0,
         print "Total Genes Remaining: ", len(geneSet)
         print "-----------------------------\n"
         
-<<<<<<< HEAD
-    log_file = open("log\\loaded_genelist.txt",'w')
-=======
     log_file = open(os.sep.join(["results","log","loaded_genelist.txt"]),'w')
->>>>>>> html_reporting_refactor
     for gene in geneSet:
         log_file.write(gene+"\n")
     log_file.close()
