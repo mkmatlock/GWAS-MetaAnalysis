@@ -2,13 +2,17 @@ import markup
 import geneVerifier as geneDB
 import gwasCatalog as gwasDB
 import drugbankCatalog as drugDB
+<<<<<<< HEAD
 from markup import oneliner as e
+=======
+>>>>>>> html_reporting_refactor
 import os
 import geneUtils
 import scipy.stats as stats
 import geneVerifier as geneDB
 
 
+<<<<<<< HEAD
 def createGeneListTable(page, genes, verify=None):
     output_list = []
     
@@ -119,13 +123,21 @@ def createTraitListingsHTML(traitListDir, genes, pfilter):
         traitChi[trait] = (a, chisq, pvalue, len(traitGenes))
     
     return traitChi
+=======
+
+
+>>>>>>> html_reporting_refactor
     
 def savePage( page, filename ):
     ofile = open(filename,'w')
     ofile.write(str(page))
     ofile.close()
     
+<<<<<<< HEAD
 def createPage( pagetitle,css_file='../genereport.css'):
+=======
+def createPage( pagetitle,css_file='genereport.css'):
+>>>>>>> html_reporting_refactor
     page = markup.page()
     page.init( title=pagetitle,
                css = (css_file))
@@ -141,12 +153,23 @@ def pageDescription( page, desc ):
     page.div("Description:", id="dheader")
     page.div(desc, id="description")
                
+<<<<<<< HEAD
 def createChiTable(page, name, cat1, cat2, a, b, c, d, chisq, pvalue):
+=======
+def createChiTable(page, name, cat1, cat2, a, b, c, d, chisq, pvalue, oddsratio,
+        kappa):
+>>>>>>> html_reporting_refactor
     page.div(name,class_="header")
     page.div.open(class_="chireport")
     page.p("Test Matrix:")
     createTable(page, [["in "+cat1, a, b],["not in "+cat1, c, d]], ["","in "+cat2,"not in "+cat2], "chiheader", ["chirow1","chirow2"], ["chicol1","chicol2","chicol3"], None, "chimatrix")
+<<<<<<< HEAD
     createTable(page, [["Chi statistic", "%.2f" % (chisq)],["P-value", "%.7f" % (pvalue)]], col_classes=["name", "value"], table_cls = "chireportstats")
+=======
+    createTable(page, [["Chi statistic", "%.2f" % (chisq)],["P-value", "%.7f" %
+        (pvalue)], ["Odds-Ratio", "%.1f" % (oddsratio)], ["Kappa Statistic",
+        "%.4f" % (kappa)]], col_classes=["name", "value"], table_cls = "chireportstats")
+>>>>>>> html_reporting_refactor
     page.div.close()
     
     
@@ -186,4 +209,8 @@ def createTable( page, data, header = None, header_class = None, row_classes=Non
         
         page.tr.close( )
     
+<<<<<<< HEAD
     page.table.close( )
+=======
+    page.table.close( )
+>>>>>>> html_reporting_refactor

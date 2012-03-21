@@ -1,3 +1,8 @@
 results
 log
 invalid_matches.txt
+<<<<<<< HEAD
+=======
+DAVID
+*.pyc
+>>>>>>> html_reporting_refactor
