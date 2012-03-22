@@ -138,13 +138,13 @@ def computeTraitDrugLists(RE_genes, drug_genes, pfilter_cutoff):
         drugs_targeting_other_RE -= drugs_targeting_RE
 
         a = len(drugs_targeting_RE)
-        b = len(drugs_targeting_disease)
-        c = len(drugs_targeting_other_RE)
+        b = len(drugs_targeting_other_RE)
+        c = len(drugs_targeting_disease)
         d = len(set(drugDB.__drugs.keys()) - (drugs_targeting_RE |
                 drugs_targeting_disease | drugs_targeting_other_RE))
         # print a, b, c, d
 
-        if (a + b) == 0:
+        if (a + b) == 0 or (a + c) == 0:
             chi, odds, kappa = 0, 0, 0
             pvalue = 1.0
         else:
@@ -526,8 +526,8 @@ if __name__ == "__main__":
     allDrugs = set(drugDB.__drugs)
 
     a4 = len(drugsTargetingRE & drugsTargetingGWAS)
-    b4 = len(drugsTargetingGWAS - drugsTargetingRE)
-    c4 = len(drugsTargetingRE - drugsTargetingGWAS)
+    b4 = len(drugsTargetingRE - drugsTargetingGWAS)
+    c4 = len(drugsTargetingGWAS - drugsTargetingRE)
     d4 = len(allDrugs - (drugsTargetingGWAS | drugsTargetingRE))
     chisq4, odds4, kappa4 = geneUtils.contingentChiSquare(a4,b4,c4,d4)
     pvalue4 = stats.chisqprob(chisq4, 1)
