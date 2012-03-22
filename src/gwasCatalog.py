@@ -13,6 +13,14 @@ __pValues = {}
 __studyGenes = {}
 __gwasCatalogue = pyCSV()
 
+def getDavidBackgroundSet(pvalue = 0.05):
+    geneList = set([])
+    for studyId in __studyGenes:
+        if __pValues[studyId] < pvalue:
+            for geneSym in __studyGenes[studyId]:
+                geneList.add(geneSym)
+    return geneList
+
 def getGenesForTrait(trait, pvalue = 0.05):
     geneList = set([])
     for studyId in __studyByTrait[trait]:

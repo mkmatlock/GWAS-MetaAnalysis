@@ -14,6 +14,12 @@ __geneNames = {}
 __drugDict = {}
 __drugs = {}
 
+def getDrugsTargetingProteinSet(proteins):
+    drugSet = set([])
+    for protein in proteins:
+        if protein in __drugDict:
+            drugSet |= __drugDict[protein]
+    return drugSet
 
 def initDruglist(drug_file):
     global __DEBUG
