@@ -532,6 +532,8 @@ if __name__ == "__main__":
     chisq4, odds4, kappa4 = geneUtils.contingentChiSquare(a4,b4,c4,d4)
     pvalue4 = stats.chisqprob(chisq4, 1)
     
+    foldchange_drugs = (float(a4 + c4) / float(a2 + c2)) / (float(b4) / float(a1 + b1))
+
     # start preparing HTML reports
     
     print "\n------------------------------\nPreparing HTML Reports..."
@@ -597,7 +599,11 @@ if __name__ == "__main__":
     
     indexpage.div.close()
     
-    
+    htmltools.createChiTable(indexpage, "Drug contingency for targeting disease vs targeting rapidly evolving proteins:",
+            "Targets Disease Genes", "Targets RE Genes", a4, b4, c4, d4,
+            chisq4, pvalue4, odds4, kappa4)
+
+    indexpage.div("Fold change drugs per gene (RE) to drugs per gene (GWAS):  %.2f" % (foldchange_drugs), class_ = "description")
     # report drugbank, GWAS overlap chi matrix
     
     indexpage.div.open(class_="reportsquare")
@@ -616,6 +622,8 @@ if __name__ == "__main__":
     indexpage.div.close()
     
     
+    
+    
     overlap = commonGenes & studyGenes & drugDB.__geneSet
     
     indexpage.div.open(class_="links")
@@ -630,10 +638,6 @@ if __name__ == "__main__":
     indexpage.p.close()
     indexpage.div.close()
     
-    htmltools.createChiTable(indexpage, "Drug contingency for targeting disease vs targeting rapidly evolving proteins:",
-            "Targets Disease Genes", "Targets RE Genes", a4, b4, c4, d4,
-            chisq4, pvalue4, odds4, kappa4)
-
     htmltools.endPage(indexpage)
     htmltools.savePage(indexpage, os.sep.join([output_dir, "index.html"]))
     
