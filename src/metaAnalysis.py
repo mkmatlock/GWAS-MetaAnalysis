@@ -138,8 +138,8 @@ def computeTraitDrugLists(RE_genes, drug_genes, pfilter_cutoff):
         drugs_targeting_other_RE -= drugs_targeting_RE
 
         a = len(drugs_targeting_RE)
-        b = len(drugs_targeting_other_RE)
-        c = len(drugs_targeting_disease)
+        b = len(drugs_targeting_disease)
+        c = len(drugs_targeting_other_RE)
         d = len(set(drugDB.__drugs.keys()) - (drugs_targeting_RE |
                 drugs_targeting_disease | drugs_targeting_other_RE))
         # print a, b, c, d
@@ -305,7 +305,7 @@ def createTraitListingsHTML(traitListDir):
         
         chi_drugs = traitMetadata['drugchi']
         htmltools.createChiTable(traitpage, "Drug contingency for targeting disease vs targeting rapidly evolving proteins:",
-                "Targets RE Genes", "Targets Disease Genes", chi_drugs[0], chi_drugs[1],
+                "Targets Disease Genes", "Targets RE Genes", chi_drugs[0], chi_drugs[1],
                 chi_drugs[2], chi_drugs[3], chi_drugs[4],
                 chi_drugs[5], chi_drugs[6], chi_drugs[7])
 
@@ -526,8 +526,8 @@ if __name__ == "__main__":
     allDrugs = set(drugDB.__drugs)
 
     a4 = len(drugsTargetingRE & drugsTargetingGWAS)
-    b4 = len(drugsTargetingRE - drugsTargetingGWAS)
-    c4 = len(drugsTargetingGWAS - drugsTargetingRE)
+    b4 = len(drugsTargetingGWAS - drugsTargetingRE)
+    c4 = len(drugsTargetingRE - drugsTargetingGWAS)
     d4 = len(allDrugs - (drugsTargetingGWAS | drugsTargetingRE))
     chisq4, odds4, kappa4 = geneUtils.contingentChiSquare(a4,b4,c4,d4)
     pvalue4 = stats.chisqprob(chisq4, 1)
@@ -631,7 +631,7 @@ if __name__ == "__main__":
     indexpage.div.close()
     
     htmltools.createChiTable(indexpage, "Drug contingency for targeting disease vs targeting rapidly evolving proteins:",
-            "Targets RE Genes", "Targets Disease Genes", a4, b4, c4, d4,
+            "Targets Disease Genes", "Targets RE Genes", a4, b4, c4, d4,
             chisq4, pvalue4, odds4, kappa4)
 
     htmltools.endPage(indexpage)
