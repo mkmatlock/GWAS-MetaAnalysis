@@ -108,12 +108,17 @@ def computeTraitDrugLists(RE_genes, drug_genes, pfilter_cutoff):
         other_drugs = []
         drug_counts_by_gene = {}
         
+        drugs_targeting_RE = set([])
+        allDrugs = set([])
         for gene in traitGenes & RE_genes:
             drug_counts_by_gene[gene] = 0
             if gene in drugDB.__drugDict:
                 for drug in drugDB.__drugDict[gene]:
                     RE_drugs.append(drug)
                 drug_counts_by_gene[gene] += len(drugDB.__drugDict[gene])
+                drugs_targeting_RE |= drugDB.__drugDict[gene]
+
+        drugs_targeting_disease = set([])
 
         for gene in ((traitGenes & drug_genes) - RE_genes):
             drug_counts_by_gene[gene] = 0
@@ -121,10 +126,34 @@ def computeTraitDrugLists(RE_genes, drug_genes, pfilter_cutoff):
                 for drug in drugDB.__drugDict[gene]:
                     other_drugs.append(drug)
                 drug_counts_by_gene[gene] += len(drugDB.__drugDict[gene])
+                drugs_targeting_disease |= drugDB.__drugDict[gene]
+
+        drugs_targeting_other_RE = set([])
+
+        for gene in RE_genes:
+            drug_counts_by_gene[gene] = 0
+            if gene in drugDB.__drugDict:
+                drugs_targeting_other_RE |= drugDB.__drugDict[gene]
+
+        drugs_targeting_other_RE -= drugs_targeting_RE
+
+        a = len(drugs_targeting_RE)
+        b = len(drugs_targeting_disease)
+        c = len(drugs_targeting_other_RE)
+        d = len(set(drugDB.__drugs.keys()) - (drugs_targeting_RE |
+                drugs_targeting_disease | drugs_targeting_other_RE))
+        # print a, b, c, d
+
+        if (a + b) == 0 or (a + c) == 0:
+            chi, odds, kappa = 0, 0, 0
+            pvalue = 1.0
+        else:
+            chi, odds, kappa = geneUtils.contingentChiSquare(a,b,c,d)
+            pvalue = stats.chisqprob(chi, 1)
         __traitMetaAnalysis[trait]['RE_drugs'] = RE_drugs
         __traitMetaAnalysis[trait]['other_drugs'] = other_drugs
         __traitMetaAnalysis[trait]['drug_counts'] = drug_counts_by_gene
-
+        __traitMetaAnalysis[trait]['drugchi'] = (a,b,c,d,chi,pvalue,odds,kappa)
 
 def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
     
@@ -274,6 +303,13 @@ def createTraitListingsHTML(traitListDir):
                 chi_Drugbank[2], chi_Drugbank[3], chi_Drugbank[4],
                 chi_Drugbank[5], chi_Drugbank[6], chi_Drugbank[7])
         
+        chi_drugs = traitMetadata['drugchi']
+        htmltools.createChiTable(traitpage, "Drug contingency for targeting disease vs targeting rapidly evolving proteins:",
+                "Targets Disease Genes", "Targets RE Genes", chi_drugs[0], chi_drugs[1],
+                chi_drugs[2], chi_drugs[3], chi_drugs[4],
+                chi_drugs[5], chi_drugs[6], chi_drugs[7])
+
+
         traitpage.table.open(class_="invisible")
         traitpage.tr.open()
 
@@ -485,7 +521,19 @@ if __name__ == "__main__":
     chisq3, oddsratio3, kappa3  = geneUtils.contingentChiSquare(a3,b3,c3,d3)
     pvalue3 = stats.chisqprob(chisq3, 1)
     
+    drugsTargetingRE = drugDB.getDrugsTargetingProteinSet(studyGenes)
+    drugsTargetingGWAS = drugDB.getDrugsTargetingProteinSet(gwasDB.getDavidBackgroundSet(pfilter_cutoff))
+    allDrugs = set(drugDB.__drugs)
+
+    a4 = len(drugsTargetingRE & drugsTargetingGWAS)
+    b4 = len(drugsTargetingGWAS - drugsTargetingRE)
+    c4 = len(drugsTargetingRE - drugsTargetingGWAS)
+    d4 = len(allDrugs - (drugsTargetingGWAS | drugsTargetingRE))
+    chisq4, odds4, kappa4 = geneUtils.contingentChiSquare(a4,b4,c4,d4)
+    pvalue4 = stats.chisqprob(chisq4, 1)
     
+    foldchange_drugs = (float(a4 + c4) / float(a2 + c2)) / (float(b4) / float(a1 + b1))
+
     # start preparing HTML reports
     
     print "\n------------------------------\nPreparing HTML Reports..."
@@ -551,7 +599,11 @@ if __name__ == "__main__":
     
     indexpage.div.close()
     
-    
+    htmltools.createChiTable(indexpage, "Drug contingency for targeting disease vs targeting rapidly evolving proteins:",
+            "Targets Disease Genes", "Targets RE Genes", a4, b4, c4, d4,
+            chisq4, pvalue4, odds4, kappa4)
+
+    indexpage.div("Fold change drugs per gene (RE) to drugs per gene (GWAS):  %.2f" % (foldchange_drugs), class_ = "description")
     # report drugbank, GWAS overlap chi matrix
     
     indexpage.div.open(class_="reportsquare")
@@ -568,6 +620,8 @@ if __name__ == "__main__":
         indexpage.a("DAVID Results", href="DAVID/david_drugbank_gwas_common.xhtml")
     
     indexpage.div.close()
+    
+    
     
     
     overlap = commonGenes & studyGenes & drugDB.__geneSet
