@@ -17,6 +17,14 @@ __EXCLUDE_OLFACTORY_PROTEINS = 1
 
 __traitMetaAnalysis = {}
 
+def writeGeneListToFile(filename, genes):
+    ffile = open(filename, 'w')
+    
+    for geneSym in genes:
+        ffile.write(geneDB.__original_names[geneSym] + "\n")
+    
+    ffile.close()
+
 def computeTraitChiSquares(genes, pfilter):
     
     traitSet = set([])
@@ -662,15 +670,19 @@ if __name__ == "__main__":
     
     total, geneTable = getGWASFrequencyTable(commonGenes)
     writeGenePage(output_dir, os.sep.join([output_dir,"gwas_genes.html"]), "Rapidly Evolving Genes found in GWAS Disease Studies", "Listing of rapidly evolving genes found in GWAS.", total, geneTable)
-    
+    writeGeneListToFile(os.sep.join(["results","log","gwas_genes.txt"]), [row[0] for row in geneTable])
+
     total, geneTable = getGWASFrequencyTable(commonDrugTargets)
     writeGenePage(output_dir, os.sep.join([output_dir,"drugbank_genes.html"]), "Rapidly Evolving Genes found in Drugbank", "Listing of rapidly evolving genes found in Drugbank.", total, geneTable)
+    writeGeneListToFile(os.sep.join(["results","log","drugbank_genes.txt"]), [row[0] for row in geneTable])
     
     total, geneTable = getGWASFrequencyTable(gwas_drugbank_overlap)
     writeGenePage(output_dir, os.sep.join([output_dir,"drugbank_gwas_genes.html"]), "Drugbank targets found in GWAS Disease Studies", "Listing of Drugbank targets found in GWAS Disease Studies.", total, geneTable)
+    writeGeneListToFile(os.sep.join(["results","log","drugbank_gwas_genes.txt"]), [row[0] for row in geneTable])
     
     total, geneTable = getGWASFrequencyTable(overlap)
     writeGenePage(output_dir, os.sep.join([output_dir,"all_genes.html"]), "Rapidly Evolving Genes found in GWAS Disease Studies and Drugbank", "Listing of rapidly evolving genes found in both GWAS and Drugbank.", total, geneTable)
+    writeGeneListToFile(os.sep.join(["results","log","all_overlap_genes.txt"]), [row[0] for row in geneTable])
     
     
     

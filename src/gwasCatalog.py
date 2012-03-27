@@ -164,6 +164,13 @@ def init(filename, __ENABLE_GENE_VERIFICATION = 0, __ENABLE_GENE_UPDATES = 0, __
     
     invalid_file.close()
     
+    background_file = open(os.sep.join(["results", "log",
+        "gwas_background.txt"]), 'w')
+
+    for geneSym in __geneSet:
+        background_file.write(geneDB.__original_names[geneSym] + "\n")
+    background_file.close()
+
     
     if __DEBUG > 0:
         print "\n---------------------------------"
