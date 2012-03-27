@@ -559,7 +559,7 @@ if __name__ == "__main__":
     print "\nCopying support files..."
         
     os.system("copy %s %s" % (os.sep.join(["html", "genereport.css"]), output_dir ))
-    os.system("copy %s %s" % (os.sep.join(["html", "DAVID", str(gene_frequency_filter), "*"]), os.sep.join([output_dir, "DAVID"])))
+    os.system("copy %s %s" % (os.sep.join(["html", "DAVID", str(gene_frequency_filter), "*"]), os.sep.join([output_dir, "DAVID", ""])))
     
     # make index.html
     
