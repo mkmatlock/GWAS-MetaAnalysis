@@ -76,7 +76,7 @@ def writeGenePage(output_dir, filename, title, desc, total, geneTable):
     htmltools.savePage(genepage, filename)
  
 def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
-    traitpage = htmltools.createPage(title)
+    traitpage = htmltools.createPage(title, scripts={'sorttable.js':'javascript'})
     htmltools.pageDescription(traitpage, desc)
     
     traitChi = computeTraitChiSquares(commonGenes, pfilter_cutoff)
@@ -98,7 +98,8 @@ def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
     traitTable = sorted(traitTable, key=lambda item: -item[1])
     
     htmltools.createTable(traitpage, traitTable, ["Disease/Trait", "# RE Genes", "# Trait Genes", "chi-square", "p-value", "odds ratio", "kappa"], 
-            "traitlisthead", None, ["traitcol", "recol", "genecol", "chicol", "pcol", "oddscol", "kappacol"], "traittable", None)
+            "traitlisthead", None, ["traitcol", "recol", "genecol", "chicol",
+                "pcol", "oddscol", "kappacol"], "sortable", None)
     htmltools.endPage(traitpage)
     htmltools.savePage(traitpage, filename)
     
@@ -381,7 +382,9 @@ def createTraitListingsHTML(traitListDir):
 def createGeneListingsHTML(geneListDir):
     for gene in gwasDB.__geneSet:
         
-        genePage = htmltools.createPage("Gene Summary: " + geneDB.__original_names[gene], css_file='../genereport.css')
+        genePage = htmltools.createPage("Gene Summary: " +
+                geneDB.__original_names[gene], css_file='../genereport.css',
+                scripts = {'../sorttable.js':'javascript'})
         
         
         # Create the disease trait tables
@@ -396,16 +399,23 @@ def createGeneListingsHTML(geneListDir):
             cnt       = len(__traitMetaAnalysis[trait]['RE'])
             chisq     = __traitMetaAnalysis[trait]['RE_chi'][4]
             pvalue    = __traitMetaAnalysis[trait]['RE_chi'][5]
+            oddsratio = __traitMetaAnalysis[trait]['RE_chi'][6]
+            kappa     = __traitMetaAnalysis[trait]['RE_chi'][7]
             numgenes  = __traitMetaAnalysis[trait]['geneset_size']
             translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
             
             if len(trait) > 38:
                 trait = trait[:35] + "..."
-            traitTable.append(["<a href=\"../traitlists/%s.html\">%s</a>" % (translate,trait), cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue)])
+            traitTable.append(["<a href=\"../traitlists/%s.html\">%s</a>" %
+                (translate,trait), cnt, numgenes, "%.2f" % (chisq), "%.7f" %
+                (pvalue), "%.1f" % (oddsratio), "%.4f" % (kappa)])
             
         genePage.div("Gene %s, total traits: %d" % (geneDB.__original_names[gene],len(traitTable)), class_="header")
         
-        htmltools.createTable(genePage, traitTable, ["Disease/Trait", "#RE Genes", "#Trait Genes", "Chi-square", "p-value"], "traitlisthead", None, ["traitcol","recol", "genecol", "chicol","pcol"], "traittable", None)
+        htmltools.createTable(genePage, traitTable, ["Disease/Trait", "#RE Genes", 
+            "#Trait Genes", "Chi-square", "p-value", "oddsratio",
+            "kappa"], "traitlisthead", None, ["traitcol","recol", "genecol",
+                "chicol","pcol","oddscol","kappacol"], "sortable", None)
         
         # Create drug bank links
         
@@ -559,6 +569,7 @@ if __name__ == "__main__":
     print "\nCopying support files..."
         
     os.system("copy %s %s" % (os.sep.join(["html", "genereport.css"]), output_dir ))
+    os.system("copy %s %s" % (os.sep.join(["html", "sorttable.js"]), output_dir ))
     os.system("copy %s %s" % (os.sep.join(["html", "DAVID", str(gene_frequency_filter), "*"]), os.sep.join([output_dir, "DAVID", ""])))
     
     # make index.html

@@ -78,7 +78,15 @@
 }
 
 /* Trait table formatting */
-.traittable {
+/* Sortable tables */
+table.sortable thead {
+    background-color:#eee;
+    color:#666666;
+    font-weight: bold;
+    cursor: default;
+}
+/* Trait table formatting */
+table.sortable {
     text-align:left;
     background: #CCCCFF;
     border:solid;
@@ -93,43 +101,42 @@
     margin-top:10px;
 }
 
-.traittable .traitlisthead {
+.sortable .traitlisthead {
     font-weight: bold;
     
 }
 
-.traittable .traitcol {
+.sortable .traitcol {
     text-align:left;
 }
 
-.traittable .recol {
+.sortable .recol {
     text-align:right;
 }
     
-.traittable .genecol {
+.sortable .genecol {
     text-align:right;
 }
 
-.traittable .chicol {
+.sortable .chicol {
     text-align:right;
 }
 
-.traittable .pcol {
-    text-align:right;
-    background:#9999FF;
-    color:white;
-}
-
-.traittable .oddscol {
-    text-align:right;
-}
-
-.traittable .kappacol {
+.sortable .pcol {
     text-align:right;
     background:#9999FF;
     color:white;
 }
 
+.sortable .oddscol {
+    text-align:right;
+}
+
+.sortable .kappacol {
+    text-align:right;
+    background:#9999FF;
+    color:white;
+}
 
 /* Gene list formatting */
 

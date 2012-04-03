@@ -16,10 +16,11 @@ def savePage( page, filename ):
     ofile.write(str(page))
     ofile.close()
     
-def createPage( pagetitle,css_file='genereport.css'):
+def createPage( pagetitle,css_file='genereport.css',scripts={}):
     page = markup.page()
     page.init( title=pagetitle,
-               css = (css_file))
+               css = (css_file),
+               script=scripts)
 
     page.div.open(id="body")
     
