@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- *****************************************************************************
+	DrugBank Database
+	Version: 	$Revision: 1.3 $
+	Date:		$Date: 2012/03/24 11:52:00 $
+
+	Copyright (c) 2012 Wishart Research Group
+	All rights reserved.
+*******************************************************************************-->
+<xs:schema targetNamespace="http://drugbank.ca" xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+		xmlns="http://drugbank.ca" elementFormDefault="qualified" version="1.0">
+	<!-- General type definitions -->
+	<xs:simpleType name="DecimalOrEmptyType">
+		<xs:union memberTypes="xs:decimal EmptyStringType"/>
+	</xs:simpleType>
+	<xs:simpleType name="EmptyStringType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value=""/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- Element Definitions -->
+	<!-- Drug secondary accession number definition begins -->
+	<xs:element name="secondary-accession-numbers">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element name="secondary-accession-number" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug secondary accession number definition ends -->
+	<!-- Drug groups definition begins -->
+	<xs:element name="groups">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element name="group">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="approved"/>
+							<xs:enumeration value="illicit"/>
+							<xs:enumeration value="experimental"/>
+							<xs:enumeration value="withdrawn"/>
+							<xs:enumeration value="nutraceutical"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug groups definition ends -->
+	<!-- Drug taxonomy definition begins -->
+	<xs:element name="substructure">
+		<xs:complexType>
+			<xs:simpleContent>
+				<xs:extension base="xs:string">
+					<xs:attribute name="class" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:simpleContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="substructures">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element ref="substructure"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="taxonomy">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="kingdom" type="xs:string"/>
+				<xs:element ref="substructures"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug taxonomy definition ends -->
+	<!-- Drug brands definition begins -->
+	<xs:element name="brands">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element name="brand" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug brands definition ends -->
+	<!-- Drug mixtures definition begins -->
+	<xs:element name="mixture">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="name" type="xs:string"/>
+				<xs:element name="ingredients" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="mixtures">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element ref="mixture"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug mixtures definition ends -->
+	<!-- Drug packagers definition begins -->
+	<xs:element name="packager">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="name" type="xs:string"/>
+				<xs:element name="url" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="packagers">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element ref="packager"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug packagers definition ends -->
+	<!-- Drug manufacturers definition begins -->
+	<xs:element name="manufacturer">
+		<xs:complexType>
+			<xs:simpleContent>
+				<xs:extension base="xs:string">
+					<xs:attribute name="generic" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:simpleContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="manufacturers">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element ref="manufacturer"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug manufactures definition ends -->
+	<!-- Drug pricing definition begins -->
+	<xs:element name="cost">
+		<xs:complexType>
+			<xs:simpleContent>
+				<xs:extension base="xs:string">
+					<xs:attribute name="currency" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:simpleContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="price">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="description" type="xs:string"/>
+				<xs:element ref="cost"/>
+				<xs:element name="unit" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="prices">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element ref="price"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug pricing definition ends -->
+	<!-- Drug categories definition begins -->
+	<xs:element name="categories">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element name="category" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug categories definition ends -->
+	<!-- Drug affected orgainsms definition begins -->
+	<xs:element name="affected-organisms">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element name="affected-organism" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug affected organisms definition ends -->
+	<!-- Drug dosage definition begins -->
+	<xs:element name="dosage">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="form" type="xs:string"/>
+				<xs:element name="route" type="xs:string"/>
+				<xs:element name="strength" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="dosages">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element ref="dosage"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug dosages definition ends -->
+	<!-- Drug ATC codes definition begins -->
+	<xs:element name="atc-codes">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element name="atc-code" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug ATC codes definition ends -->
+	<!-- Drug AHFS codes definition begins -->
+	<xs:element name="ahfs-codes">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element name="ahfs-code" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug AHFS codes definition ends -->
+	<!-- Drug Patent definition begins -->
+	<xs:element name="patent">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="number" type="xs:string"/>
+				<xs:element name="country" type="xs:string"/>
+				<xs:element name="approved" type="xs:string"/>
+				<xs:element name="expires" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="patents">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element ref="patent"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug patent definition ends -->
+	<!-- Drug food interactions definition begins -->
+	<xs:element name="food-interactions">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="food-interaction" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug food interactions definition ends -->
+	<!-- Drug drug interactions definition begins -->
+	<xs:element name="drug-interaction">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="drug" type="xs:string"/>
+        <xs:element name="name" type="xs:string"/>
+				<xs:element name="description" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="drug-interactions">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element ref="drug-interaction"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug drug interactions definition ends -->
+	<!-- Drug protein sequences (biotech) definition begins -->
+	<xs:element name="protein-sequences">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element name="protein-sequence" type="SequenceType"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug protein sequences (biotech) definition ends-->
+	<!-- Drug external links definition begins -->
+	<xs:element name="external-link">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="resource" type="xs:string"/>
+				<xs:element name="url" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="external-links">
+		<xs:complexType>
+			<xs:sequence maxOccurs="unbounded" minOccurs="0">
+				<xs:element ref="external-link"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug external links definition ends -->
+	<!-- Drug targets definition begins -->
+	<xs:element name="targets">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="target" type="TargetBondType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug targets definition ends -->
+	<!-- Drug enzymes definition begins -->
+	<xs:element name="enzymes">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="enzyme" type="BondType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug enzmes definition ends -->
+	<!-- Drug transporters definition begins -->
+	<xs:element name="transporters">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="transporter" type="BondType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug transporters definition ends -->
+	<!-- Drug carriers definition begins -->
+	<xs:element name="carriers">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="carrier" type="BondType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Drug carriers definition ends -->
+	<!-- Partner  Pfams definition begins -->
+	<xs:element name="pfam">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="identifier" type="xs:string"/>
+				<xs:element name="name" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="pfams">
+		<xs:complexType>
+			<xs:sequence minOccurs="0" maxOccurs="unbounded">
+				<xs:element ref="pfam"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Partner  Pfams definition end -->
+	<!-- Partner  GO Classification definition begins -->
+	<xs:element name="go-classifier">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="category" type="xs:string"/>
+				<xs:element name="description" type="xs:string"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="go-classifiers">
+		<xs:complexType>
+			<xs:sequence minOccurs="0" maxOccurs="unbounded">
+				<xs:element ref="go-classifier"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- Partner  GO Classification definition ends -->
+	<!-- Partner Essentiality definition begins -->
+	<xs:element name="essentiality">
+		<xs:simpleType>
+			<xs:restriction base="xs:string">
+				<xs:enumeration value="Essential"/>
+				<xs:enumeration value="Non-Essential"/>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<!-- Partner Essentiality definition ends -->
+	<!-- Partner Species definition begins -->
+	<xs:element name="species">
+		<xs:complexType>
+      <xs:sequence minOccurs="0" maxOccurs="1">
+        <xs:element name="category">
+      		<xs:simpleType>
+      			<xs:restriction base="xs:string">
+      				<xs:enumeration value="human"/>
+              <xs:enumeration value="bacterial"/>
+      				<xs:enumeration value="fungal"/>
+              <xs:enumeration value="viral"/>
+              <xs:enumeration value="parasitic"/>
+      			</xs:restriction>
+      		</xs:simpleType>
+      	</xs:element>
+        <xs:element name="name" type="xs:string"/>
+        <xs:element name="uniprot-name" type="xs:string"/>
+        <xs:element name="uniprot-taxon-id" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+	</xs:element>
+	<!-- Partner Species definition ends -->
+	
+	<!-- Complex Type Definitions -->
+	<xs:complexType name="SequenceType">
+		<xs:sequence>
+			<xs:element name="header" type="xs:string"/>
+			<xs:element name="chain" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PropertyType">
+		<xs:sequence>
+			<xs:element name="kind">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="logP"/>
+						<xs:enumeration value="logS"/>
+						<xs:enumeration value="logP/hydrophobicity"/>
+						<xs:enumeration value="Water Solubility"/>
+						<xs:enumeration value="caco2 Permeability"/>
+						<xs:enumeration value="pKa"/>
+						<xs:enumeration value="IUPAC Name"/>
+						<xs:enumeration value="Molecular Weight"/>
+						<xs:enumeration value="Monoisotopic Weight"/>
+						<xs:enumeration value="SMILES"/>
+						<xs:enumeration value="Molecular Formula"/>
+						<xs:enumeration value="InChI"/>
+						<xs:enumeration value="InChIKey"/>
+            <xs:enumeration value="Polar Surface Area (PSA)"/>
+            <xs:enumeration value="Refractivity"/>
+            <xs:enumeration value="Polarizability"/>
+            <xs:enumeration value="Rotatable Bond Count"/>
+            <xs:enumeration value="H Bond Acceptor Count"/>
+            <xs:enumeration value="H Bond Donor Count"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="value" type="xs:string"/>
+			<xs:element name="source">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="JChem"/>
+						<xs:enumeration value="ALOGPS"/>
+						<xs:enumeration value=""/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PropertiesType">
+		<xs:sequence>
+			<xs:element name="property" type="PropertyType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SynonymsType">
+		<xs:sequence maxOccurs="unbounded" minOccurs="0">
+			<xs:element name="synonym" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IdentifiersType">
+		<xs:sequence maxOccurs="unbounded" minOccurs="0">
+			<xs:element name="external-identifier">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="resource" type="xs:string"/>
+						<xs:element name="identifier" type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BondActionsType">
+		<xs:sequence maxOccurs="unbounded" minOccurs="0">
+			<xs:element name="action" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BondType">
+		<xs:sequence>
+			<xs:element name="actions" type="BondActionsType"/>
+			<xs:element name="references" type="xs:string"/>
+		</xs:sequence>
+		<xs:attribute name="position" type="xs:integer" use="optional"/>
+		<xs:attribute name="partner" type="xs:integer"/>
+	</xs:complexType>
+	<xs:complexType name="TargetBondType">
+		<xs:complexContent>
+			<xs:extension base="BondType">
+				<xs:sequence>
+					<xs:element name="known-action">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="yes"/>
+								<xs:enumeration value="no"/>
+								<xs:enumeration value="unknown"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="PartnerType">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="general-function" type="xs:string"/>
+			<xs:element name="specific-function" type="xs:string"/>
+			<xs:element name="gene-name" type="xs:string"/>
+			<xs:element name="locus" type="xs:string"/>
+			<xs:element name="reaction" type="xs:string"/>
+			<xs:element name="signals" type="xs:string"/>
+			<xs:element name="cellular-location" type="xs:string"/>
+			<xs:element name="transmembrane-regions" type="xs:string"/>
+			<xs:element name="theoretical-pi" type="DecimalOrEmptyType"/>
+			<xs:element name="molecular-weight" type="xs:string"/>
+			<xs:element name="chromosome" type="xs:string"/>
+			<xs:element ref="species"/>
+			<xs:element ref="essentiality"/>
+			<xs:element name="references" type="xs:string"/>
+			<xs:element name="external-identifiers" type="IdentifiersType"/>
+			<xs:element name="synonyms" type="SynonymsType"/>
+			<xs:element name="protein-sequence" type="SequenceType" minOccurs="0"/>
+			<xs:element name="gene-sequence" type="SequenceType" minOccurs="0"/>
+			<xs:element ref="pfams"/>
+			<xs:element ref="go-classifiers"/>
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:integer" use="required"/>
+	</xs:complexType>
+	<xs:complexType name="DrugType">
+		<xs:sequence>
+			<xs:element name="drugbank-id" type="xs:string"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="description" type="xs:string"/>
+			<xs:element name="cas-number" type="xs:string"/>
+			<xs:element name="general-references" type="xs:string"/>
+			<xs:element name="synthesis-reference" type="xs:string"/>
+			<xs:element name="indication" type="xs:string"/>
+			<xs:element name="pharmacology" type="xs:string"/>
+			<xs:element name="mechanism-of-action" type="xs:string"/>
+			<xs:element name="toxicity" type="xs:string"/>
+			<xs:element name="biotransformation" type="xs:string"/>
+			<xs:element name="absorption" type="xs:string"/>
+			<xs:element name="half-life" type="xs:string"/>
+			<xs:element name="protein-binding" type="xs:string"/>
+			<xs:element name="route-of-elimination" type="xs:string"/>
+			<xs:element name="volume-of-distribution" type="xs:string"/>
+			<xs:element name="clearance" type="xs:string"/>
+			<xs:element ref="secondary-accession-numbers"/>
+			<xs:element ref="groups"/>
+			<xs:element ref="taxonomy"/>
+			<xs:element name="synonyms" type="SynonymsType"/>
+			<xs:element ref="brands"/>
+			<xs:element ref="mixtures"/>
+			<xs:element ref="packagers"/>
+			<xs:element ref="manufacturers"/>
+			<xs:element ref="prices"/>
+			<xs:element ref="categories"/>
+			<xs:element ref="affected-organisms"/>
+			<xs:element ref="dosages"/>
+			<xs:element ref="atc-codes"/>
+			<xs:element ref="ahfs-codes"/>
+			<xs:element ref="patents"/>
+			<xs:element ref="food-interactions"/>
+			<xs:element ref="drug-interactions"/>
+			<xs:element ref="protein-sequences" minOccurs="0"/><!-- Only present for biotech drugs -->
+			<xs:element name="calculated-properties" type="PropertiesType" minOccurs="0"/><!-- Only present for small molecule drugs -->
+			<xs:element name="experimental-properties" type="PropertiesType"/>
+			<xs:element name="external-identifiers" type="IdentifiersType"/>
+			<xs:element ref="external-links"/>
+			<xs:element ref="targets"/>
+			<xs:element ref="enzymes"/>
+			<xs:element ref="transporters"/>
+			<xs:element ref="carriers"/>
+		</xs:sequence>
+		<xs:attribute name="type" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="small molecule"/>
+					<xs:enumeration value="biotech"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="updated" type="xs:string" use="required"/>
+		<xs:attribute name="created" type="xs:string" use="required"/>
+		<xs:attribute name="version" type="xs:decimal" use="required"/>
+	</xs:complexType>
+	
+	<xs:element name="drugs">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="drug" type="DrugType" minOccurs="0" maxOccurs="unbounded" />
+				<xs:element name="partners">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="partner" type="PartnerType" minOccurs="0" maxOccurs="unbounded" />
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+      <xs:attribute name="schemaVersion" type="xs:decimal" use="required"/>
+		</xs:complexType>
+	
+		<xs:keyref name="targetPartnerIdKeyRef" refer="partnerIdKey">
+			<xs:selector xpath="drug/targets/*"/>
+			<xs:field xpath="@partner"/>
+		</xs:keyref>
+		<xs:keyref name="enzymePartnerIdKeyRef" refer="partnerIdKey">
+			<xs:selector xpath="drug/enzymes/*"/>
+			<xs:field xpath="@partner"/>
+		</xs:keyref>
+		<xs:keyref name="transporterPartnerIdKeyRef" refer="partnerIdKey">
+			<xs:selector xpath="drug/transporters/*"/>
+			<xs:field xpath="@partner"/>
+		</xs:keyref>
+		<xs:keyref name="carrierPartnerIdKeyRef" refer="partnerIdKey">
+			<xs:selector xpath="drug/carriers/*"/>
+			<xs:field xpath="@partner"/>
+		</xs:keyref>
+		<xs:key name="partnerIdKey">
+			<xs:selector xpath=".//partner"/>
+			<xs:field xpath="@id"/>
+		</xs:key>
+	</xs:element>	
+</xs:schema>
