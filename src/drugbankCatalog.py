@@ -96,4 +96,17 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
         print "Updated Drug Target Gene Symbols:   ", len(updatedSet)
         print "Remaining Drug Target Gene Symbols: ", len(__geneSet) 
         print "------------------------------------------\n"
-        
+       
+if __name__ == "__main__":
+    print "\nInitializing HGNC Database..."
+    geneDB.init(os.sep.join(["data","hgnc","hgnc_symbols.txt"]),1)
+    
+    print "\nLoading DrugBank drug catalogue..."
+    initDruglist(os.sep.join(["data","drugbank","drug_links.csv"]))
+    print "\nLoading DrugBank drug target catalogue..."
+    initTargets(os.sep.join(["data","drugbank","target_links.csv"]),
+    os.sep.join(["data","drugbank","all_target_protein.fasta"]),1,1)
+
+    print "Total Targets:", len(__geneSet)
+    print "Total Drugs:", len(__drugs)
+    

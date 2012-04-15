@@ -1,10 +1,16 @@
 import os
 import re
 import sys
+import geneVerifier as geneDB
+import geneUtils
+from pyCSV import pyCSV
+
 __drugs = {}
 __targets = {}
 __excluded_targets = 0
-
+__target_names = {}
+__targets_unnamed = 0
+__geneSet = set([])
 START = 0
 END = 1
 CLOSURE = 2
@@ -27,7 +33,45 @@ __strsplit = str.split
 
 __listappend = list.append
 __listpop = list.pop
+__DEBUG=1
 
+def mapTargetNames(targets_file,__ENABLE_GENE_UPDATES=1,__ENABLE_GENE_VERIFICATION=1):
+    global __targets_unnamed, __targets, __target_names, __geneSet
+    
+    __targetCatalogue = pyCSV()
+    __targetCatalogue.load(targets_file)
+    rejectednames = 0
+
+    representedids = set([])
+
+    for r in xrange(1, __targetCatalogue.rows+1):
+        targetId   = int(__targetCatalogue.get(r,0))
+        targetGene = geneUtils.formatGeneSymbol(__targetCatalogue.get(r,2))
+        
+        representedids.add(targetId)
+
+        if targetGene != None:
+            parentSym = geneDB.findUpdatedSymbol(targetGene)
+            if __ENABLE_GENE_UPDATES and parentSym != None:
+                if __DEBUG>1:
+                    print "Updated:", targetGene, "to:", parentSym
+                targetGene = parentSym
+            if __ENABLE_GENE_VERIFICATION and not geneDB.isApproved(targetGene):
+                if __DEBUG>1:
+                    print "Rejected:", targetGene
+                rejectednames+=1
+                continue
+
+            __geneSet.add(targetGene)
+            __target_names[targetId] = targetGene
+    
+    for targetId in __targets:
+        if targetId not in __target_names.keys():
+            __targets_unnamed += 1
+
+    if __DEBUG>0:
+        print "Rejected:        ", rejectednames
+        print "Unrepresented:   ", len(set(__targets.keys()) - representedids)
 
 def startCapture():
     global __capture, __cap_string
@@ -65,7 +109,7 @@ def handleStart(tag, args, stack):
     elif checkParent('targets', stack):
         if tag == 'target':
             argDict = parseArgs(args)
-            __l_target = {'partner':argDict['partner']}
+            __l_target = {'partner':int(argDict['partner'])}
             try:
                 __listappend(__targets[__l_target['partner']], __l_drug['drugbank-id'])
             except KeyError:
@@ -248,5 +292,11 @@ def loadXML(filename):
 if __name__ == "__main__":
 #    import psyco
 #    psyco.full()
-
+    geneDB.init(os.sep.join(["data","hgnc","hgnc_symbols.txt"]))
+    
     loadXML(os.sep.join(["data","drugbank","drugbank.xml"]))
+
+    mapTargetNames(os.sep.join(["data","drugbank","target_links.csv"]))
+    
+    print "Named targets:   ", len(__target_names)
+    print "Unnamed targets: ", __targets_unnamed
