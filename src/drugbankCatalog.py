@@ -78,6 +78,7 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
     
     proteins = parseFASTA(protein_file)
     
+    __drugSet = set([])
     empty_gene_drug_targets = 0
     for fasta in proteins:
         items = fasta[1].split()
@@ -89,7 +90,9 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
             drugs = parenthetical.split(";")
             
             for drug in drugs:
-                __drugDict[__geneNames[geneId]].add(drug.strip())
+                drugbankid = drug.strip()
+                __drugDict[__geneNames[geneId]].add(drugbankid)
+                __drugSet.add(drugbankid)
     
     removable = set([])
     for gene in __geneSet:
@@ -99,11 +102,24 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
             empty_gene_drug_targets += 1
     __geneSet -= removable
     
+    removable_drugs = set([])
+    for drugbankid in __drugs:
+        if drugbankid not in __drugSet:
+            removable_drugs.add(drugbankid)
+    
+    for drugbankid in __drugSet:
+        if drugbankid not in __drugs:
+            __drugs[drugbankid] = {'name':drugbankid}
+
+    for drugbankid in removable_drugs:
+        del __drugs[drugbankid]
+
     if __DEBUG>0:
         print "\n------------------------------------------"
         print "Invalid Drug Target Gene Symbols:   ", len(rejectedSet)
         print "Updated Drug Target Gene Symbols:   ", len(updatedSet)
-        print "Remaining Drug Target Gene Symbols: ", len(__geneSet) 
+        print "Remaining Drug Target Gene Symbols: ", len(__geneSet)
+        print "Drugs with targets:                 ", len(__drugSet), len(__drugs)
         print "Removed:", empty_gene_drug_targets, "genes without targeting drugs"
         print "------------------------------------------\n"
        

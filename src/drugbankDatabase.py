@@ -85,6 +85,7 @@ def mapTargetNames(targets_file,__ENABLE_GENE_UPDATES=1,__ENABLE_GENE_VERIFICATI
         print "Rejected:        ", rejectednames
         print "Unrepresented:   ", len(set(__targets.keys()) - representedids)
     
+    __drugSet = set([])
     for drugbankid in __drugs:
         drug = __drugs[drugbankid]
 
@@ -92,19 +93,28 @@ def mapTargetNames(targets_file,__ENABLE_GENE_UPDATES=1,__ENABLE_GENE_VERIFICATI
             targetId = target['partner']
             if targetId in __target_names:
                 targetGene = __target_names[targetId]
-
+                
+                __drugSet.add(drugbankid)
                 try:
                     __drugDict[targetGene].add(drugbankid)
                 except KeyError:
                     __drugDict[targetGene] = set([drugbankid])
-        
+    
+    removable_drugs = set([])
+    for drugbankid in __drugs:
+        if drugbankid not in __drugSet:
+            removable_drugs.add(drugbankid)
+
+    for drugbankid in removable_drugs:
+        del __drugs[drugbankid]
+
     lenbefore = len(__geneSet)
     __geneSet = __geneSet & set(__drugDict.keys())
     lenafter = len(__geneSet)
     if __DEBUG>0:
         print "Removed", (lenafter - lenbefore), "untargeted gene names"
-
-    print "Total drugs after pruning:  ", len(__drugDict)
+    
+    print "Total drugs with targets:   ", len(__drugSet), len(__drugs)
     print "Total geneset size:         ", len(__geneSet)
 
 def startCapture():

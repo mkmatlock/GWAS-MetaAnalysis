@@ -549,7 +549,7 @@ if __name__ == "__main__":
     
     drugsTargetingRE = drugDB.getDrugsTargetingProteinSet(studyGenes)
     drugsTargetingGWAS = drugDB.getDrugsTargetingProteinSet(gwasDB.getDavidBackgroundSet(pfilter_cutoff))
-    allDrugs = set(drugDB.__drugs)
+    allDrugs = set(drugDB.__drugs.keys())
 
     a4 = len(drugsTargetingRE & drugsTargetingGWAS)
     b4 = len(drugsTargetingGWAS - drugsTargetingRE)
