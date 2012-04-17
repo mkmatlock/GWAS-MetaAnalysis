@@ -2,7 +2,9 @@ from geneList import *
 import os,sys
 import geneVerifier as geneDB
 import gwasCatalog as gwasDB
-import drugbankCatalog as drugDB
+
+
+
 import math
 import scipy.stats as stats
 import htmltools
@@ -13,6 +15,7 @@ __ENABLE_GENE_UPDATES = 0
 __EXCLUDE_PSEUDOGENES = 0
 __INCLUDE_MAPPED_GENES = 0
 __EXCLUDE_OLFACTORY_PROTEINS = 1
+__USE_DRUGBANK_XML = 0
 
 
 __traitMetaAnalysis = {}
@@ -348,27 +351,23 @@ def createTraitListingsHTML(traitListDir):
             link = "http://www.drugbank.ca/drugs/%s" % (drug)
             if drug not in drugDB.__drugs:
                 traitpage.li(oneliner.a(drug, href=link))
-            elif drugDB.__drugs[drug][1] != None:
-                traitpage.li("<a href = \"%s\">%s</a> [<a href=\"%s\">alt</a>]" % (link, drugDB.__drugs[drug][0], drugDB.__drugs[drug][1]))
             else:
-                traitpage.li(oneliner.a(drugDB.__drugs[drug][0], href=link))
+                traitpage.li(oneliner.a(drugDB.__drugs[drug]['name'], href=link))
         traitpage.ul.close()
         traitpage.div.close()
         
         druglistlen = len(__traitMetaAnalysis[trait]['other_drugs'])
         traitpage.div("%d Drugs targeting other proteins" % (druglistlen), class_="description")
         
-
+        
         traitpage.div.open(class_="druglist")
         traitpage.ul.open()
         for drug in __traitMetaAnalysis[trait]['other_drugs']:
             link = "http://www.drugbank.ca/drugs/%s" % (drug)
             if drug not in drugDB.__drugs:
                 traitpage.li(oneliner.a(drug, href=link))
-            elif drugDB.__drugs[drug][1] != None:
-                traitpage.li("<a href = \"%s\">%s</a> [<a href=\"%s\">alt</a>]" % (link, drugDB.__drugs[drug][0], drugDB.__drugs[drug][1]))
             else:
-                traitpage.li(oneliner.a(drugDB.__drugs[drug][0], href=link))
+                traitpage.li(oneliner.a(drugDB.__drugs[drug]['name'], href=link))
         traitpage.ul.close()
         traitpage.div.close()
 
@@ -433,10 +432,8 @@ def createGeneListingsHTML(geneListDir):
                 link = "http://www.drugbank.ca/drugs/%s" % (drug)
                 if drug not in drugDB.__drugs:
                     genePage.li(oneliner.a(drug, href=link))
-                elif drugDB.__drugs[drug][1] != None:
-                    genePage.li("<a href = \"%s\">%s</a> [<a href=\"%s\">alt</a>]" % (link, drugDB.__drugs[drug][0], drugDB.__drugs[drug][1]))
                 else:
-                    genePage.li(oneliner.a(drugDB.__drugs[drug][0], href=link))
+                    genePage.li(oneliner.a(drugDB.__drugs[drug]['name'], href=link))
             genePage.ul.close()
             genePage.div.close()
             
@@ -466,6 +463,8 @@ if __name__ == "__main__":
             gene_frequency_filter = int(sys.argv[i+1])
         elif sys.argv[i] == "--skip-lists":
             skip_listings=1
+        elif sys.argv[i] == "--drugbank-xml":
+            __USE_DRUGBANK_XML = 1
         elif sys.argv[i] == "--rm-pseudo":
             __EXCLUDE_PSEUDOGENES = 1
         elif sys.argv[i] == "--rm-study":
@@ -497,10 +496,19 @@ if __name__ == "__main__":
     
     print "\nLoading GWAS catalogue..."
     gwasDB.init(os.sep.join(["data","gwas","gwascatalog.txt"]),__ENABLE_GENE_VERIFICATION, __ENABLE_GENE_UPDATES, __INCLUDE_MAPPED_GENES,trait_exclude_file,pfilter_cutoff)
-    print "\nLoading DrugBank drug catalogue..."
-    drugDB.initDruglist(os.sep.join(["data","drugbank","drug_links.csv"]))
-    print "\nLoading DrugBank drug target catalogue..."
-    drugDB.initTargets(os.sep.join(["data","drugbank","target_links.csv"]), os.sep.join(["data","drugbank","all_target_protein.fasta"]),__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES)
+    
+
+    if __USE_DRUGBANK_XML:
+        import drugbankDatabase as drugDB
+        print "\nLoading drug bank database from XML..."
+        drugDB.loadXML(os.sep.join(["data","drugbank","drugbank.xml"]))
+        drugDB.mapTargetNames(os.sep.join(["data","drugbank","target_links.csv"]))
+    else:
+        import drugbankCatalog as drugDB
+        print "\nLoading DrugBank drug catalogue..."
+        drugDB.initDruglist(os.sep.join(["data","drugbank","drug_links.csv"]))
+        print "\nLoading DrugBank drug target catalogue..."
+        drugDB.initTargets(os.sep.join(["data","drugbank","target_links.csv"]), os.sep.join(["data","drugbank","all_target_protein.fasta"]),__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES)
     
     commonGenes = studyGenes & gwasDB.__geneSet
     cgWithoutGWAS = studyGenes - gwasDB.__geneSet
