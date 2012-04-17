@@ -5,7 +5,7 @@ from pyCSV import *
 import geneUtils
 import os
 
-__DEBUG = 0
+__DEBUG = 1
 
 __targetCatalogue = pyCSV()
 __drugCatalogue = pyCSV()
@@ -40,7 +40,7 @@ def initDruglist(drug_file):
         if link.strip() == "":
             link = None
         
-        __drugs[db_id] = (db_name, link)
+        __drugs[db_id] = {'name':db_name, 'link':link}
 
 def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABLE_GENE_UPDATES=0):
     global __DEBUG, __targetCatalogue, __geneSet, __geneNames, __drugDict
@@ -78,6 +78,7 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
     
     proteins = parseFASTA(protein_file)
     
+    empty_gene_drug_targets = 0
     for fasta in proteins:
         items = fasta[1].split()
         geneId = int(items[0])
@@ -90,11 +91,20 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
             for drug in drugs:
                 __drugDict[__geneNames[geneId]].add(drug.strip())
     
+    removable = set([])
+    for gene in __geneSet:
+        if gene not in __drugDict or len(__drugDict[gene]) == 0:
+            removable.add(gene)
+
+            empty_gene_drug_targets += 1
+    __geneSet -= removable
+    
     if __DEBUG>0:
         print "\n------------------------------------------"
         print "Invalid Drug Target Gene Symbols:   ", len(rejectedSet)
         print "Updated Drug Target Gene Symbols:   ", len(updatedSet)
         print "Remaining Drug Target Gene Symbols: ", len(__geneSet) 
+        print "Removed:", empty_gene_drug_targets, "genes without targeting drugs"
         print "------------------------------------------\n"
        
 if __name__ == "__main__":
