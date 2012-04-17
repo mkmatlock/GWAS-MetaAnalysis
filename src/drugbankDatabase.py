@@ -4,7 +4,9 @@ import sys
 import geneVerifier as geneDB
 import geneUtils
 from pyCSV import pyCSV
+import drugbankCatalog as drugCat
 
+__drugDict = {}
 __drugs = {}
 __targets = {}
 __excluded_targets = 0
@@ -33,7 +35,16 @@ __strsplit = str.split
 
 __listappend = list.append
 __listpop = list.pop
-__DEBUG=1
+__DEBUG=0
+
+def getDrugsTargetingProteinSet(proteins):
+    drugs = set([])
+
+    for gene in proteins:
+        if gene in __drugDict:
+            drugs |= __drugDict[gene]
+
+    return drugs
 
 def mapTargetNames(targets_file,__ENABLE_GENE_UPDATES=1,__ENABLE_GENE_VERIFICATION=1):
     global __targets_unnamed, __targets, __target_names, __geneSet
@@ -64,6 +75,7 @@ def mapTargetNames(targets_file,__ENABLE_GENE_UPDATES=1,__ENABLE_GENE_VERIFICATI
 
             __geneSet.add(targetGene)
             __target_names[targetId] = targetGene
+
     
     for targetId in __targets:
         if targetId not in __target_names.keys():
@@ -72,6 +84,28 @@ def mapTargetNames(targets_file,__ENABLE_GENE_UPDATES=1,__ENABLE_GENE_VERIFICATI
     if __DEBUG>0:
         print "Rejected:        ", rejectednames
         print "Unrepresented:   ", len(set(__targets.keys()) - representedids)
+    
+    for drugbankid in __drugs:
+        drug = __drugs[drugbankid]
+
+        for target in drug['targets']:
+            targetId = target['partner']
+            if targetId in __target_names:
+                targetGene = __target_names[targetId]
+
+                try:
+                    __drugDict[targetGene].add(drugbankid)
+                except KeyError:
+                    __drugDict[targetGene] = set([drugbankid])
+        
+    lenbefore = len(__geneSet)
+    __geneSet = __geneSet & set(__drugDict.keys())
+    lenafter = len(__geneSet)
+    if __DEBUG>0:
+        print "Removed", (lenafter - lenbefore), "untargeted gene names"
+
+    print "Total drugs after pruning:  ", len(__drugDict)
+    print "Total geneset size:         ", len(__geneSet)
 
 def startCapture():
     global __capture, __cap_string
@@ -271,7 +305,6 @@ def loadXML(filename):
     
     cDrug = 0
     
-    print "Loading drug bank database from XML..."
 
     pbar = ProgressBar()
     pbar.setMaximum(float(2028522))
@@ -285,18 +318,33 @@ def loadXML(filename):
     
     pbar.updateProgress(lnum)
     print "Done"
-    print "Targets excluded: ", __excluded_targets
-    print "Drugs loaded:     ", len(__drugs)
-    print "Targets loaded:   ", len(__targets)
+    print "Targets excluded:           ", __excluded_targets
+    print "Drugs loaded:               ", len(__drugs)
+    print "Targets loaded:             ", len(__targets)
 
 if __name__ == "__main__":
 #    import psyco
 #    psyco.full()
     geneDB.init(os.sep.join(["data","hgnc","hgnc_symbols.txt"]))
     
+    print "Loading drug bank database from XML..."
     loadXML(os.sep.join(["data","drugbank","drugbank.xml"]))
-
     mapTargetNames(os.sep.join(["data","drugbank","target_links.csv"]))
+    
+    print __targets[1]
+    print __targets[3]
     
     print "Named targets:   ", len(__target_names)
     print "Unnamed targets: ", __targets_unnamed
+
+    print "Loading DrugBank drug catalogue..."
+    drugCat.initDruglist(os.sep.join(["data","drugbank","drug_links.csv"]))
+    print "Loading DrugBank drug target catalogue..."
+    drugCat.initTargets(os.sep.join(["data","drugbank","target_links.csv"]),
+            os.sep.join(["data","drugbank","all_target_protein.fasta"]),1,1)
+    
+    print "Drugcatalogue genes: ", len(drugCat.__geneSet)
+    print "Overlaping genes:    ", len(__geneSet & drugCat.__geneSet)
+
+# DB00191; DB00193; DB00226; DB00234; DB00285
+    print __drugDict['slc6a2']
