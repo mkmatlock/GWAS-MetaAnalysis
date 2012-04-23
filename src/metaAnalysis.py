@@ -183,11 +183,7 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
         RE = []
         for gene in traitGenes & RE_genes:
             
-            count = 0
-            for studyId in gwasDB.__studyByTrait[trait]:
-                if studyId in gwasDB.__studyGenes:
-                    if gene in gwasDB.__studyGenes[studyId]:
-                        count+=1
+            count = len(gwasDB.getTraitsForGene(gene))
             RE.append((gene, count))
         
         __traitMetaAnalysis[trait]['RE'] = RE
@@ -197,11 +193,7 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
         drug = []
         for gene in traitGenes & drug_genes:
             
-            count = 0
-            for studyId in gwasDB.__studyByTrait[trait]:
-                if studyId in gwasDB.__studyGenes:
-                    if gene in gwasDB.__studyGenes[studyId]:
-                        count+=1
+            count = len(gwasDB.getTraitsForGene(gene))
             drug.append((gene, count))
         
         __traitMetaAnalysis[trait]['drugbank'] = drug
@@ -211,11 +203,7 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
         other = []
         for gene in traitGenes - RE_genes - drug_genes:
             
-            count = 0
-            for studyId in gwasDB.__studyByTrait[trait]:
-                if studyId in gwasDB.__studyGenes:
-                    if gene in gwasDB.__studyGenes[studyId]:
-                        count+=1
+            count = len(gwasDB.getTraitsForGene(gene))
             other.append((gene,count))
         
         __traitMetaAnalysis[trait]['other'] = other

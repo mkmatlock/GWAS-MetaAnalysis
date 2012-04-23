@@ -17,6 +17,7 @@ START = 0
 END = 1
 CLOSURE = 2
 
+__EXCLUDE_PHARM_ACTION_UNKNOWN = 1
 
 # private variables
 __l_drug = 0
@@ -178,7 +179,7 @@ def handleEnd(tag, stack):
         __drugs[__l_drug['drugbank-id']] = __l_drug
 
     elif checkParent('targets', stack):
-        if tag == 'target' and 'known-action' in __l_target.keys() and __l_target['known-action'] == 'yes':
+        if (tag == 'target' and ('known-action' in __l_target.keys() and __l_target['known-action'] == 'yes')) or not __EXCLUDE_PHARM_ACTION_UNKNOWN:
             __listappend(__l_drug['targets'], __l_target)
         elif tag == 'target' and 'known-action' in __l_target.keys() and __l_target['known-action'] != 'yes':
             __excluded_targets += 1
