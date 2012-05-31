@@ -3,7 +3,7 @@ import os,sys
 import geneVerifier as geneDB
 import gwasCatalog as gwasDB
 
-
+import fisherTest as fisher
 
 import math
 import scipy.stats as stats
@@ -51,8 +51,8 @@ def computeTraitChiSquares(genes, pfilter):
         
         chisq, oddsratio, kappa = geneUtils.contingentChiSquare(a,b,c,d)
         pvalue = stats.chisqprob(chisq, 1)
-        
-        traitChi[trait] = (a, chisq, oddsratio, kappa, pvalue, len(traitGenes))
+        fisherp = fisher.compute(a,b,c,d)
+        traitChi[trait] = (a, chisq, oddsratio, kappa, pvalue, len(traitGenes), fisherp)
     
     return traitChi
     
@@ -87,7 +87,7 @@ def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
     traitTable = []
     
     for trait in traitChi:
-        (cnt, chisq, oddsratio, kappa, pvalue,numgenes)=traitChi[trait]
+        (cnt, chisq, oddsratio, kappa, pvalue, numgenes, fisher)=traitChi[trait]
         
         translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
         
@@ -95,14 +95,14 @@ def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
             trait = trait[:35] + "..."
         alink = "<a href=\"traitlists/%s.html\">%s</a>" % (translate, trait)
         
-        entry = [alink, cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue), "%.1f" % (oddsratio), "%.4f" % (kappa)]
+        entry = [alink, cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue), "%.1f" % (oddsratio), "%.4f" % (kappa), "%.7f" % fisher]
         traitTable.append(entry)
         
     traitTable = sorted(traitTable, key=lambda item: -item[1])
     
-    htmltools.createTable(traitpage, traitTable, ["Disease/Trait", "# RE Genes", "# Trait Genes", "chi-square", "p-value", "odds ratio", "kappa"], 
+    htmltools.createTable(traitpage, traitTable, ["Disease/Trait", "# RE Genes", "# Trait Genes", "chi-square", "p-value", "odds ratio", "kappa", "fisher P"], 
             "traitlisthead", None, ["traitcol", "recol", "genecol", "chicol",
-                "pcol", "oddscol", "kappacol"], "sortable", None)
+                "pcol", "oddscol", "kappacol","fishercol"], "sortable", None)
     htmltools.endPage(traitpage)
     htmltools.savePage(traitpage, filename)
     
@@ -159,13 +159,15 @@ def computeTraitDrugLists(RE_genes, drug_genes, pfilter_cutoff):
         if (a + b) == 0 or (a + c) == 0:
             chi, odds, kappa = 0, 0, 0
             pvalue = 1.0
+            fisherp = 1.0
         else:
             chi, odds, kappa = geneUtils.contingentChiSquare(a,b,c,d)
             pvalue = stats.chisqprob(chi, 1)
+            fisherp = fisher.compute(a,b,c,d)
         __traitMetaAnalysis[trait]['RE_drugs'] = RE_drugs
         __traitMetaAnalysis[trait]['other_drugs'] = other_drugs
         __traitMetaAnalysis[trait]['drug_counts'] = drug_counts_by_gene
-        __traitMetaAnalysis[trait]['drugchi'] = (a,b,c,d,chi,pvalue,odds,kappa)
+        __traitMetaAnalysis[trait]['drugchi'] = (a,b,c,d,chi,pvalue,odds,kappa,fisherp)
 
 def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
     
@@ -217,9 +219,10 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
         
         chisq, oddsratio, kappa = geneUtils.contingentChiSquare(a,b,c,d)
         pvalue = stats.chisqprob(chisq, 1)
+        fisherp = fisher.compute(a,b,c,d)
         
         __traitMetaAnalysis[trait]['RE_chi'] = (a, b, c, d, chisq, pvalue,
-                oddsratio, kappa)
+                oddsratio, kappa, fisherp)
         
         a = len(traitGenes & drug_genes)
         b = len(drug_genes - traitGenes)
@@ -228,9 +231,10 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
         
         chisq, oddsratio, kappa = geneUtils.contingentChiSquare(a,b,c,d)
         pvalue = stats.chisqprob(chisq, 1)
+        fisherp = fisher.compute(a,b,c,d)
         
         __traitMetaAnalysis[trait]['drugbank_chi'] = (a, b, c, d, chisq,
-                pvalue, oddsratio, kappa)
+                pvalue, oddsratio, kappa, fisherp)
         
         __traitMetaAnalysis[trait]['geneset_size'] = len(traitGenes)
 
@@ -296,18 +300,18 @@ def createTraitListingsHTML(traitListDir):
         # two of these
         
         htmltools.createChiTable(traitpage, "Overlap with rapidly evolving genes:", "RE", "trait", chi_RE[0], chi_RE[1], chi_RE[2], 
-                chi_RE[3], chi_RE[4], chi_RE[5], chi_RE[6], chi_RE[7])
+                chi_RE[3], chi_RE[4], chi_RE[5], chi_RE[6], chi_RE[7], chi_RE[8])
         
         htmltools.createChiTable(traitpage, "Overlap with drugbank genes:",
                 "Drugbank", "trait", chi_Drugbank[0], chi_Drugbank[1],
                 chi_Drugbank[2], chi_Drugbank[3], chi_Drugbank[4],
-                chi_Drugbank[5], chi_Drugbank[6], chi_Drugbank[7])
+                chi_Drugbank[5], chi_Drugbank[6], chi_Drugbank[7], chi_Drugbank[8])
         
         chi_drugs = traitMetadata['drugchi']
         htmltools.createChiTable(traitpage, "Drug contingency for targeting disease vs targeting rapidly evolving proteins:",
                 "Targets Disease Genes", "Targets RE Genes", chi_drugs[0], chi_drugs[1],
                 chi_drugs[2], chi_drugs[3], chi_drugs[4],
-                chi_drugs[5], chi_drugs[6], chi_drugs[7])
+                chi_drugs[5], chi_drugs[6], chi_drugs[7], chi_drugs[8])
 
 
         traitpage.table.open(class_="invisible")
@@ -388,6 +392,7 @@ def createGeneListingsHTML(geneListDir):
             pvalue    = __traitMetaAnalysis[trait]['RE_chi'][5]
             oddsratio = __traitMetaAnalysis[trait]['RE_chi'][6]
             kappa     = __traitMetaAnalysis[trait]['RE_chi'][7]
+            fisherp    = __traitMetaAnalysis[trait]['RE_chi'][8]
             numgenes  = __traitMetaAnalysis[trait]['geneset_size']
             translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
             
@@ -395,14 +400,14 @@ def createGeneListingsHTML(geneListDir):
                 trait = trait[:35] + "..."
             traitTable.append(["<a href=\"../traitlists/%s.html\">%s</a>" %
                 (translate,trait), cnt, numgenes, "%.2f" % (chisq), "%.7f" %
-                (pvalue), "%.1f" % (oddsratio), "%.4f" % (kappa)])
+                (pvalue), "%.1f" % (oddsratio), "%.4f" % (kappa), "%.7f" % (fisherp)])
             
         genePage.div("Gene %s, total traits: %d" % (geneDB.__original_names[gene],len(traitTable)), class_="header")
         
         htmltools.createTable(genePage, traitTable, ["Disease/Trait", "#RE Genes", 
             "#Trait Genes", "Chi-square", "p-value", "oddsratio",
-            "kappa"], "traitlisthead", None, ["traitcol","recol", "genecol",
-                "chicol","pcol","oddscol","kappacol"], "sortable", None)
+            "kappa","fisher P"], "traitlisthead", None, ["traitcol","recol", "genecol",
+                "chicol","pcol","oddscol","kappacol","fishercol"], "sortable", None)
         
         # Create drug bank links
         
@@ -464,9 +469,11 @@ if __name__ == "__main__":
         elif sys.argv[i].startswith("--"):
             print "Invalid arg:", sys.argv[i]
             sys.exit(1)
+
     
     print "\nInitializing HGNC Database..."
     geneDB.init(os.sep.join(["data","hgnc","hgnc_symbols.txt"]),__EXCLUDE_PSEUDOGENES)
+
     
     print "\nLoading rapidly evolving proteins..."
     studyGenes = loadEvolutionaryGenes(os.sep.join(["data","genelists","positive_selection_gene_lists.txt"]),__ENABLE_GENE_VERIFICATION,__ENABLE_GENE_UPDATES,gene_frequency_filter, included_studies)
@@ -502,6 +509,8 @@ if __name__ == "__main__":
     cgWithoutGWAS = studyGenes - gwasDB.__geneSet
     gwasWithoutCG = gwasDB.__geneSet - studyGenes
     
+    print "initializing fisher algorithm..."
+    fisher.init(len(geneDB.__approved_symbols))
     
     # chi-square contingency table for gwas and RE
     
@@ -510,8 +519,9 @@ if __name__ == "__main__":
     c1 = len(cgWithoutGWAS)
     d1 = len( geneDB.__approved_symbols - (studyGenes | gwasDB.__geneSet) )
     chisq1, oddsratio1, kappa1 = geneUtils.contingentChiSquare(a1,b1,c1,d1)
-    pvalue1 = stats.chisqprob(chisq1, 1)
     
+    pvalue1 = stats.chisqprob(chisq1, 1)
+    fisherp1 = fisher.compute(a1,b1,c1,d1)
     
     
     commonDrugTargets = drugDB.__geneSet & studyGenes
@@ -522,8 +532,7 @@ if __name__ == "__main__":
     d2 = len( geneDB.__approved_symbols - ( studyGenes | drugDB.__geneSet ) )
     chisq2, oddsratio2, kappa2  = geneUtils.contingentChiSquare(a2,b2,c2,d2)
     pvalue2 = stats.chisqprob(chisq2, 1)
-    
-    
+    fisherp2 = fisher.compute(a2,b2,c2,d2)
     
     
     gwas_drugbank_overlap = gwasDB.__geneSet & drugDB.__geneSet
@@ -534,7 +543,9 @@ if __name__ == "__main__":
     d3 = len( geneDB.__approved_symbols - ( drugDB.__geneSet | gwasDB.__geneSet ) )
     chisq3, oddsratio3, kappa3  = geneUtils.contingentChiSquare(a3,b3,c3,d3)
     pvalue3 = stats.chisqprob(chisq3, 1)
-    
+    fisherp3 = fisher.compute(a3,b3,c3,d3)
+
+
     drugsTargetingRE = drugDB.getDrugsTargetingProteinSet(studyGenes)
     drugsTargetingGWAS = drugDB.getDrugsTargetingProteinSet(gwasDB.getDavidBackgroundSet(pfilter_cutoff))
     allDrugs = set(drugDB.__drugs.keys())
@@ -545,7 +556,9 @@ if __name__ == "__main__":
     d4 = len(allDrugs - (drugsTargetingGWAS | drugsTargetingRE))
     chisq4, odds4, kappa4 = geneUtils.contingentChiSquare(a4,b4,c4,d4)
     pvalue4 = stats.chisqprob(chisq4, 1)
-    
+    fisherp4 = fisher.compute(a4,b4,c4,d4)
+
+
     foldchange_drugs = (float(a4 + c4) / float(a2 + c2)) / (float(b4) / float(a1 + b1))
 
     # start preparing HTML reports
@@ -586,7 +599,7 @@ if __name__ == "__main__":
     # report gwas, RE overlap chi matrix
     
     htmltools.createChiTable(indexpage, "GWAS Overlap with Rapidly Evolving Geneset:", "GWAS", "RE", a1, b1, c1, d1, chisq1, pvalue1,
-            oddsratio1, kappa1)
+            oddsratio1, kappa1, fisherp1)
     
     indexpage.div.open(class_="links")
     indexpage.a("Trait Report", href="gwas_traits.html")
@@ -602,7 +615,7 @@ if __name__ == "__main__":
     # report drugbank, RE overlap chi matrix
     
     indexpage.div.open(class_="reportsquare")
-    htmltools.createChiTable(indexpage, "Drugbank Overlap with Rapidly Evolving Geneset:", "Drugbank", "RE", a2, b2, c2, d2, chisq2, pvalue2, oddsratio2, kappa2)
+    htmltools.createChiTable(indexpage, "Drugbank Overlap with Rapidly Evolving Geneset:", "Drugbank", "RE", a2, b2, c2, d2, chisq2, pvalue2, oddsratio2, kappa2, fisherp2)
     
     indexpage.div.open(class_="links")
     indexpage.a("Trait Report", href="overlap_traits.html")
@@ -616,7 +629,7 @@ if __name__ == "__main__":
     
     htmltools.createChiTable(indexpage, "Drug contingency for targeting disease vs targeting rapidly evolving proteins:",
             "Targets Disease Genes", "Targets RE Genes", a4, b4, c4, d4,
-            chisq4, pvalue4, odds4, kappa4)
+            chisq4, pvalue4, odds4, kappa4, fisherp4)
 
     indexpage.div("Fold change drugs per gene (RE) to drugs per gene (GWAS):  %.2f" % (foldchange_drugs), class_ = "description")
     # report drugbank, GWAS overlap chi matrix
@@ -624,7 +637,7 @@ if __name__ == "__main__":
     indexpage.div.open(class_="reportsquare")
     htmltools.createChiTable(indexpage, "GWAS Overlap with Drugbank:",
             "Drugbank", "GWAS", a3, b3, c3, d3, chisq3, pvalue3, 
-            oddsratio3, kappa3)
+            oddsratio3, kappa3, fisherp3)
     
     indexpage.div.open(class_="links")
     indexpage.a("Trait Report", href="drugbank_traits.html")
