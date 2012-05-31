@@ -1,6 +1,7 @@
 import sys 
 import fisherTest as fisher
 import random
+from drugbankDatabase import ProgressBar
 
 def __internal_compute(a, c1, c2, n, iterations):
     items = xrange(0,n)
@@ -26,12 +27,21 @@ def computeOverlapPval(s1, s2, n):
 
 def simultaneousPermutation(n, category_sizes, testset, iterations):
     avg_p_values = [0] * len(category_sizes)
+    
+    print "Running permutation test on %d categories drawn from %d items for %d iterations" % (len(category_sizes), n, iterations)
+    pbar = ProgressBar()
+    pbar.setMaximum(iterations)
+    pbar.updateProgress(0)
 
     sampleset = xrange(0, n)
     for i in xrange(0, iterations):
+        if i % 5 == 0:
+            pbar.updateProgress(i)
         for j, c in enumerate(category_sizes):
             s1 = set(random.sample(sampleset, c))
             avg_p_values[j] += computeOverlapPval(s1, testset, n)
+
+    pbar.finalize()
 
     return [v / float(iterations) for v in avg_p_values]
 
