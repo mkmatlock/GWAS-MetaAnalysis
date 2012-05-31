@@ -13,6 +13,11 @@ __pValues = {}
 __studyGenes = {}
 __gwasCatalogue = pyCSV()
 
+def getTraitsForGene(geneSym):
+    if geneSym in __traitDict:
+        return __traitDict[geneSym]
+    return set([])
+
 def getDavidBackgroundSet(pvalue = 0.05):
     geneList = set([])
     for studyId in __studyGenes:
@@ -108,8 +113,8 @@ def init(filename, __ENABLE_GENE_VERIFICATION = 0, __ENABLE_GENE_UPDATES = 0, __
     updatedGeneSet = set([])
     
     for i in xrange(1, __gwasCatalogue.rows+1):
-        geneString = __gwasCatalogue.get(i, 13)
-        geneTrait = __gwasCatalogue.get(i, 7)
+        geneString = __gwasCatalogue.get(i, 13).strip()
+        geneTrait = __gwasCatalogue.get(i, 7).strip()
         
         pvalueText = __gwasCatalogue.get(i, 27)
         pvalue = 0

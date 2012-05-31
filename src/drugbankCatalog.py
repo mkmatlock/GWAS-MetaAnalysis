@@ -5,7 +5,7 @@ from pyCSV import *
 import geneUtils
 import os
 
-__DEBUG = 0
+__DEBUG = 1
 
 __targetCatalogue = pyCSV()
 __drugCatalogue = pyCSV()
@@ -40,7 +40,7 @@ def initDruglist(drug_file):
         if link.strip() == "":
             link = None
         
-        __drugs[db_id] = (db_name, link)
+        __drugs[db_id] = {'name':db_name, 'link':link}
 
 def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABLE_GENE_UPDATES=0):
     global __DEBUG, __targetCatalogue, __geneSet, __geneNames, __drugDict
@@ -78,6 +78,8 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
     
     proteins = parseFASTA(protein_file)
     
+    __drugSet = set([])
+    empty_gene_drug_targets = 0
     for fasta in proteins:
         items = fasta[1].split()
         geneId = int(items[0])
@@ -88,12 +90,49 @@ def initTargets(targets_file, protein_file,__ENABLE_GENE_VERIFICATION=0, __ENABL
             drugs = parenthetical.split(";")
             
             for drug in drugs:
-                __drugDict[__geneNames[geneId]].add(drug.strip())
+                drugbankid = drug.strip()
+                __drugDict[__geneNames[geneId]].add(drugbankid)
+                __drugSet.add(drugbankid)
     
+    removable = set([])
+    for gene in __geneSet:
+        if gene not in __drugDict or len(__drugDict[gene]) == 0:
+            removable.add(gene)
+
+            empty_gene_drug_targets += 1
+    __geneSet -= removable
+    
+    removable_drugs = set([])
+    for drugbankid in __drugs:
+        if drugbankid not in __drugSet:
+            removable_drugs.add(drugbankid)
+    
+    for drugbankid in __drugSet:
+        if drugbankid not in __drugs:
+            __drugs[drugbankid] = {'name':drugbankid}
+
+    for drugbankid in removable_drugs:
+        del __drugs[drugbankid]
+
     if __DEBUG>0:
         print "\n------------------------------------------"
         print "Invalid Drug Target Gene Symbols:   ", len(rejectedSet)
         print "Updated Drug Target Gene Symbols:   ", len(updatedSet)
-        print "Remaining Drug Target Gene Symbols: ", len(__geneSet) 
+        print "Remaining Drug Target Gene Symbols: ", len(__geneSet)
+        print "Drugs with targets:                 ", len(__drugSet), len(__drugs)
+        print "Removed:", empty_gene_drug_targets, "genes without targeting drugs"
         print "------------------------------------------\n"
-        
+       
+if __name__ == "__main__":
+    print "\nInitializing HGNC Database..."
+    geneDB.init(os.sep.join(["data","hgnc","hgnc_symbols.txt"]),1)
+    
+    print "\nLoading DrugBank drug catalogue..."
+    initDruglist(os.sep.join(["data","drugbank","drug_links.csv"]))
+    print "\nLoading DrugBank drug target catalogue..."
+    initTargets(os.sep.join(["data","drugbank","target_links.csv"]),
+    os.sep.join(["data","drugbank","all_target_protein.fasta"]),1,1)
+
+    print "Total Targets:", len(__geneSet)
+    print "Total Drugs:", len(__drugs)
+    
