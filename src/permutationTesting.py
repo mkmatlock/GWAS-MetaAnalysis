@@ -35,7 +35,7 @@ def simultaneousPermutation(n, category_sizes, testset, iterations):
 
     sampleset = xrange(0, n)
     for i in xrange(0, iterations):
-        if i % 5 == 0:
+        if i % 1 == 0:
             pbar.updateProgress(i)
         for j, c in enumerate(category_sizes):
             s1 = set(random.sample(sampleset, c))
