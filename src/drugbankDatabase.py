@@ -286,7 +286,7 @@ class ProgressBar:
         if num_bars < self.barwidth:
             bars += ">"
         
-        sys.stdout.write(("Progress: %6s |%-"+str(self.barwidth)+"s| ") % ("%.2f" % ( percentage ), bars))
+        sys.stdout.write(("Progress: %6s %% |%-"+str(self.barwidth)+"s| ") % ("%.2f" % ( percentage ), bars))
 
     def setBarWidth(self, barwidth):
         self.barwidth = int(barwidth)
@@ -297,6 +297,11 @@ class ProgressBar:
     def updateProgress(self, progress):
         self.val = float(progress)
         self.sysout()
+    
+    def finalize(self):
+        self.val = self.maximum
+        self.sysout()
+        print "done."
 
     def setMininum(self, minval):
         self.minimum = float(minval)
