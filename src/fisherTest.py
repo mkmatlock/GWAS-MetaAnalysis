@@ -152,8 +152,6 @@ def computeV2(a,b,c,d):
     
     return __compute_quotient(numer, denom)
 
-def compute(a,b,c,d):
-    return computeV2(a,b,c,d)
 
 def __compute_quotient(numer, denom):
     p=1.0
@@ -176,14 +174,39 @@ def __compute_quotient(numer, denom):
     return p
 
 def reduceTable(a,b,c,d):
-    i = 0
     while a > 0:
         a = a-1
         b = b+1
         c = c+1
         d = d-1
-        i = i+1
-    return a,b,c,d,i
+    return a,b,c,d
+
+def restoreTable(i, a, b, c, d, fisher):
+    while i > 0:
+        fisher *= float(b * c) / float((a+1)*(d+1))
+        a+=1
+        b-=1
+        c-=1
+        d+=1
+        
+        i-=1
+
+    return fisher
+
+__cached = {}
+
+def compute(a,b,c,d):
+    ar,br,cr,dr = reduceTable(a,b,c,d)
+    
+    key = (ar,br,cr,dr)
+    if key in __cached:
+        fisher = __cached[key]
+    else:
+        fisher = computeV2(ar,br,cr,dr)
+        __cached[key] = fisher
+
+    return restoreTable(a, ar,br,cr,dr, fisher)
+
 
 def init(n):
     computeSeive(n)
@@ -205,16 +228,9 @@ if __name__ == "__main__":
 
     import time
 
-    print "scale test v1"
+    print "scale test"
     start = time.clock()
-    for i in xrange(0,10):
-        computeV1(a,b,c,d)
-    end = time.clock()
-    print "time elapsed:", (end-start)
-
-    print "scale test v2"
-    start = time.clock()
-    for i in xrange(0,10):
-        computeV2(a,b,c,d)
+    for i in xrange(0,100):
+        compute(a+i,b-i,c-i,d+i)
     end = time.clock()
     print "time elapsed:", (end-start)
