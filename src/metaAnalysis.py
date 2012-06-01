@@ -4,6 +4,7 @@ import geneVerifier as geneDB
 import gwasCatalog as gwasDB
 
 import fisherTest as fisher
+import statAdjust as adjust
 
 import math
 import scipy.stats as stats
@@ -20,8 +21,8 @@ __INCLUDE_MAPPED_GENES = 0
 __EXCLUDE_OLFACTORY_PROTEINS = 1
 __USE_DRUGBANK_XML = 0
 
-__SIGNIFICANCE_LEVEL = 0.001
-__ITERATIONS = 100
+__SIGNIFICANCE_LEVEL = 0.05
+__ITERATIONS = 10000
 
 __traitMetaAnalysis = {}
 
@@ -113,21 +114,34 @@ def computeTraitPermutationPvalues(traitChi, commonGenes, significance_level, it
     return mapping
         
 
+def dict_to_list(d):
+    return [(k,d[k]) for k in d]
+
 def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
     traitpage = htmltools.createPage(title, scripts={'sorttable.js':'javascript'})
     htmltools.pageDescription(traitpage, desc)
     
     traitChi = computeTraitChiSquares(commonGenes, pfilter_cutoff)
     
+    benjamini_input = [(k,traitChi[k][6]) for k in traitChi]
+    benjamini_values = dict(adjust.benjamini(__SIGNIFICANCE_LEVEL, benjamini_input))
+
     permutationTraitValues = computeTraitPermutationPvalues(traitChi, commonGenes, __SIGNIFICANCE_LEVEL, __ITERATIONS)
+
+    FDR = adjust.falseDiscoveryRate(__SIGNIFICANCE_LEVEL, dict_to_list(benjamini_values), dict_to_list(permutationTraitValues))
+
+    traitpage.div("False Discovery Rate:                 %.7f".replace(" ", "&nbsp;") % (FDR),class_="console")
     
     traitTable = []
-    
     for trait in traitChi:
         (cnt, chisq, oddsratio, kappa, pvalue, numgenes, fisher) = traitChi[trait]
         permutation_pvalue = permutationTraitValues[trait]
+        if trait in benjamini_values:
+            benjamini_pvalue = "%.7f" % (benjamini_values[trait])
+        else:
+            benjamini_pvalue = "n/a"
         
-        if pvalue <= __SIGNIFICANCE_LEVEL:
+        if fisher <= __SIGNIFICANCE_LEVEL:
             
             translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
             
@@ -135,13 +149,24 @@ def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
                 trait = trait[:35] + "..."
             alink = "<a href=\"traitlists/%s.html\">%s</a>" % (translate, trait)
             
-            entry = [alink, cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue), "%.1f" % (oddsratio), "%.4f" % (kappa), "%.7f" % fisher, "%.7f" % permutation_pvalue]
+            entry = [alink, cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue),
+                    "%.1f" % (oddsratio), "%.4f" % (kappa), "%.7f" % fisher,
+                    "%.7f" % permutation_pvalue, benjamini_pvalue]
             traitTable.append(entry)
             
     traitTable = sorted(traitTable, key=lambda item: -item[1])
     
-    htmltools.createTable(traitpage, traitTable, ["Disease/Trait", "# RE Genes", "# Trait Genes", "chi-square", "p-value", "odds ratio", "kappa", "fisher P", "permutation P"], 
-            "traitlisthead", None, ["traitcol", "recol", "genecol", "chicol", "pcol", "oddscol", "kappacol","fishercol","permcol"], "sortable", None)
+    htmltools.createTable(
+              traitpage,
+              traitTable,
+            ["Disease/Trait", "# RE Genes", "# Trait Genes", 
+                "chi-square", "p-value", "odds ratio", "kappa", 
+                "fisher P", "permutation P", "benjamini P"],
+             "traitlisthead",
+              None,
+            ["traitcol", "recol", "genecol", "chicol", "pcol", 
+                "oddscol", "kappacol","fishercol","permcol", "bencol"],
+             "sortable", None)
     htmltools.endPage(traitpage)
     htmltools.savePage(traitpage, filename)
     
