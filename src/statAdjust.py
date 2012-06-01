@@ -6,14 +6,17 @@ def prune(significance, test_results):
     return [pair for pair in test_results if pair[1] <= significance]
 
 def benjamini(significance, test_results):
-    sorted_results = sort(test_results)
+    pruned_results = prune(significance, test_results)
+    sorted_results = sort(pruned_results)
     x = len(sorted_results)
-    result = [(pair[0], pair[1] * (x - i)) for i, pair in enumerate(sorted_results)]
-    return prune(significance, result)
-
+    return [(pair[0], pair[1] * (x - i)) for i, pair in enumerate(sorted_results)]
+    
 def falseDiscoveryRate(significance, test_results, permutation_results):
     t_categories = set([pair[0] for pair in prune(significance, test_results)])
     f_categories = set([pair[0] for pair in prune(significance, permutation_results)])
+
+    if( len(t_categories) == 0 ):
+        return 0.0
     
     return float(len(f_categories)) / float(len(t_categories))
 
