@@ -332,8 +332,7 @@ def loadXML(filename):
         lnum += 1
         cDrug = parseLine(line, cDrug, stack)
     
-    pbar.updateProgress(lnum)
-    print "Done"
+    pbar.finalize()
     print "Targets excluded:           ", __excluded_targets
     print "Drugs loaded:               ", len(__drugs)
     print "Targets loaded:             ", len(__targets)
