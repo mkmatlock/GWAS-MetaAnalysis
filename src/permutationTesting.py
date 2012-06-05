@@ -23,7 +23,9 @@ def computeOverlapPval(s1, s2, n):
     b = len(s1 - s2)
     c = len(s2 - s1)
     d = n - (a + b + c)
-    return fisher.compute(a,b,c,d)
+    probability_value = fisher.compute(a,b,c,d)
+    return fisher.significance(probability_value, a,b,c,d)
+
 
 def simultaneousPermutation(significance_level, n, categories, testset_size, iterations):
     
