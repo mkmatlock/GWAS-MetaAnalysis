@@ -193,6 +193,14 @@ def restoreTable(i, a, b, c, d, fisher):
 
     return fisher
 
+def incrementTable(a,b,c,d, fisher):
+    fisher *= float(b * c) / float((a+1)*(d+1))
+    a+=1
+    b-=1
+    c-=1
+    d+=1
+    return a,b,c,d,fisher
+
 __cached = {}
 
 def compute(a,b,c,d):
@@ -206,6 +214,17 @@ def compute(a,b,c,d):
         __cached[key] = fisher
 
     return restoreTable(a, ar,br,cr,dr, fisher)
+
+def significance(observed_probability, a,b,c,d):
+    ar, br, cr, dr = reduceTable(a,b,c,d)
+    
+    base_fisher = compute(ar,br,cr,dr)
+    pvalue = 0.0
+    while(ar >= 0 and br >= 0 and cr >= 0 and dr >= 0):
+        if base_fisher <= observed_probability:
+            pvalue += base_fisher
+        ar,br,cr,dr,base_fisher = incrementTable(ar,br,cr,dr, base_fisher)
+    return pvalue
 
 
 def init(n):
@@ -224,13 +243,8 @@ if __name__ == "__main__":
     computeFactorsUpTo(n)
     
     print "compute fisher exact test a=%d, b=%d, c=%d, d=%d" % (a,b,c,d)
-    print compute(a,b,c,d)
+    val = compute(a,b,c,d)
+    print val
 
-    import time
+    print "pvalue for fisher exact test: ", significance(val, a,b,c,d)
 
-    print "scale test"
-    start = time.clock()
-    for i in xrange(0,100):
-        compute(a+i,b-i,c-i,d+i)
-    end = time.clock()
-    print "time elapsed:", (end-start)
