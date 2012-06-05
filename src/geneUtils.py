@@ -9,7 +9,7 @@ def contingentChiSquare(a,b,c,d):
     chisq      = math.pow(a*d-b*c,2) * (a + b + c + d) / ((a+b)*(c+d)*(b+d)*(a+c))
 
     if b*c == 0:
-        oddsratio = 0
+        oddsratio = float("inf")
     else:
         oddsratio  = float(a * d) / float(b * c)
     
