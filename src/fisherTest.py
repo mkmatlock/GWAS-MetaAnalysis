@@ -103,11 +103,11 @@ def eliminateFactors(factors1, factors2):
             del factors1[p]
             del factors2[p]
 
-
-def compute(a,b,c,d):
+def computeV1(a,b,c,d):
     def addAllFactorsBetween((n,m),factors):
         for i in range(n,m+1):
             copyFactors(i, factors)
+
     n = a+b+c+d
     denom_factorials = [(a+c+1,n),(2,d)]
     numer_factorials = [(a+1,a+b),(c+1,c+d),(b+1,b+d)]
@@ -126,6 +126,32 @@ def compute(a,b,c,d):
     denom.reverse()
     
     return __compute_quotient(numer, denom)
+
+def computeV2(a,b,c,d):
+    def addAllItemsBetween((n,m),factors):
+        for i in range(n,m+1):
+            try:
+                factors[i] += 1
+            except KeyError:
+                factors[i] = 1
+
+    n = a+b+c+d
+    denom_factorials = [(a+c+1,n),(2,d)]
+    numer_factorials = [(a+1,a+b),(c+1,c+d),(b+1,b+d)]
+
+    numer_factors = {}
+    denom_factors = {}
+    
+    [addAllItemsBetween(R, denom_factors) for R in denom_factorials]
+    [addAllItemsBetween(R, numer_factors) for R in numer_factorials]
+    
+    eliminateFactors(numer_factors, denom_factors)
+    
+    numer = [math.pow(p,numer_factors[p]) for p in numer_factors]
+    denom = [math.pow(p,denom_factors[p]) for p in denom_factors]
+    
+    return __compute_quotient(numer, denom)
+
 
 def __compute_quotient(numer, denom):
     p=1.0
@@ -148,14 +174,39 @@ def __compute_quotient(numer, denom):
     return p
 
 def reduceTable(a,b,c,d):
-    i = 0
     while a > 0:
         a = a-1
         b = b+1
         c = c+1
         d = d-1
-        i = i+1
-    return a,b,c,d,i
+    return a,b,c,d
+
+def restoreTable(i, a, b, c, d, fisher):
+    while i > 0:
+        fisher *= float(b * c) / float((a+1)*(d+1))
+        a+=1
+        b-=1
+        c-=1
+        d+=1
+        
+        i-=1
+
+    return fisher
+
+__cached = {}
+
+def compute(a,b,c,d):
+    ar,br,cr,dr = reduceTable(a,b,c,d)
+    
+    key = (ar,br,cr,dr)
+    if key in __cached:
+        fisher = __cached[key]
+    else:
+        fisher = computeV2(ar,br,cr,dr)
+        __cached[key] = fisher
+
+    return restoreTable(a, ar,br,cr,dr, fisher)
+
 
 def init(n):
     computeSeive(n)
@@ -174,4 +225,12 @@ if __name__ == "__main__":
     
     print "compute fisher exact test a=%d, b=%d, c=%d, d=%d" % (a,b,c,d)
     print compute(a,b,c,d)
-    
+
+    import time
+
+    print "scale test"
+    start = time.clock()
+    for i in xrange(0,100):
+        compute(a+i,b-i,c-i,d+i)
+    end = time.clock()
+    print "time elapsed:", (end-start)

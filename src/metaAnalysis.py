@@ -4,11 +4,15 @@ import geneVerifier as geneDB
 import gwasCatalog as gwasDB
 
 import fisherTest as fisher
+import statAdjust as adjust
 
 import math
 import scipy.stats as stats
 import htmltools
 from markup import oneliner
+from drugbankDatabase import ProgressBar
+
+import permutationTesting as permutation
 
 __ENABLE_GENE_VERIFICATION = 0
 __ENABLE_GENE_UPDATES = 0
@@ -17,6 +21,8 @@ __INCLUDE_MAPPED_GENES = 0
 __EXCLUDE_OLFACTORY_PROTEINS = 1
 __USE_DRUGBANK_XML = 0
 
+__SIGNIFICANCE_LEVEL = 0.05
+__ITERATIONS = 10000
 
 __traitMetaAnalysis = {}
 
@@ -29,6 +35,7 @@ def writeGeneListToFile(filename, genes):
     ffile.close()
 
 def computeTraitChiSquares(genes, pfilter):
+
     
     traitSet = set([])
     for gene in genes:
@@ -37,8 +44,16 @@ def computeTraitChiSquares(genes, pfilter):
                 traitSet.add(trait)
     
     traitChi = {}
-    
+    pbar = ProgressBar()
+
+    pbar.setMaximum(len(traitSet))
+    pbar.updateProgress(0)
+    i=0
     for trait in traitSet:
+        if i % 5 == 0:
+            pbar.updateProgress(0)
+
+        i+=1
         traitGenes = gwasDB.getGenesForTrait(trait,pfilter)
         
         listA = traitGenes & genes
@@ -53,7 +68,7 @@ def computeTraitChiSquares(genes, pfilter):
         pvalue = stats.chisqprob(chisq, 1)
         fisherp = fisher.compute(a,b,c,d)
         traitChi[trait] = (a, chisq, oddsratio, kappa, pvalue, len(traitGenes), fisherp)
-    
+    pbar.finalize()
     return traitChi
     
 
@@ -77,32 +92,81 @@ def writeGenePage(output_dir, filename, title, desc, total, geneTable):
     
     htmltools.endPage(genepage)
     htmltools.savePage(genepage, filename)
- 
+
+def computeTraitPermutationPvalues(traitChi, commonGenes, significance_level, iterations):
+    symbol_set = list(geneDB.__approved_symbols)
+    n = len(symbol_set)
+    
+    test_set = set([])
+    for gene in commonGenes:
+        i = symbol_set.index(gene)
+        test_set.add(i)
+    
+    category_keys = traitChi.keys()
+    category_sizes = [traitChi[key][5] for key in category_keys]
+    
+    results = permutation.simultaneousPermutation(n, category_sizes, test_set, iterations)
+
+    mapping = {}
+    for i, k in enumerate(category_keys):
+        mapping[k] = results[i]
+
+    return mapping
+        
+
+def dict_to_list(d):
+    return [(k,d[k]) for k in d]
+
 def writeTraitPage(filename, title, desc, commonGenes, pfilter_cutoff):
     traitpage = htmltools.createPage(title, scripts={'sorttable.js':'javascript'})
     htmltools.pageDescription(traitpage, desc)
     
     traitChi = computeTraitChiSquares(commonGenes, pfilter_cutoff)
     
-    traitTable = []
+    benjamini_input = [(k,traitChi[k][6]) for k in traitChi]
+    benjamini_values = dict(adjust.benjamini(__SIGNIFICANCE_LEVEL, benjamini_input))
+
+    permutationTraitValues = computeTraitPermutationPvalues(traitChi, commonGenes, __SIGNIFICANCE_LEVEL, __ITERATIONS)
+
+    FDR = adjust.falseDiscoveryRate(__SIGNIFICANCE_LEVEL, dict_to_list(benjamini_values), dict_to_list(permutationTraitValues))
+
+    traitpage.div("False Discovery Rate:                 %.7f".replace(" ", "&nbsp;") % (FDR),class_="console")
     
+    traitTable = []
     for trait in traitChi:
-        (cnt, chisq, oddsratio, kappa, pvalue, numgenes, fisher)=traitChi[trait]
+        (cnt, chisq, oddsratio, kappa, pvalue, numgenes, fisher) = traitChi[trait]
+        permutation_pvalue = permutationTraitValues[trait]
+        if trait in benjamini_values:
+            benjamini_pvalue = "%.7f" % (benjamini_values[trait])
+        else:
+            benjamini_pvalue = "n/a"
         
-        translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
-        
-        if len(trait) > 38:
-            trait = trait[:35] + "..."
-        alink = "<a href=\"traitlists/%s.html\">%s</a>" % (translate, trait)
-        
-        entry = [alink, cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue), "%.1f" % (oddsratio), "%.4f" % (kappa), "%.7f" % fisher]
-        traitTable.append(entry)
-        
+        if fisher <= __SIGNIFICANCE_LEVEL:
+            
+            translate = trait.replace(" ","_").replace("/", " or ").replace("\\", " or ")
+            
+            if len(trait) > 38:
+                trait = trait[:35] + "..."
+            alink = "<a href=\"traitlists/%s.html\">%s</a>" % (translate, trait)
+            
+            entry = [alink, cnt, numgenes, "%.2f" % (chisq), "%.7f" % (pvalue),
+                    "%.1f" % (oddsratio), "%.4f" % (kappa), "%.7f" % fisher,
+                    "%.7f" % permutation_pvalue, benjamini_pvalue]
+            traitTable.append(entry)
+            
     traitTable = sorted(traitTable, key=lambda item: -item[1])
     
-    htmltools.createTable(traitpage, traitTable, ["Disease/Trait", "# RE Genes", "# Trait Genes", "chi-square", "p-value", "odds ratio", "kappa", "fisher P"], 
-            "traitlisthead", None, ["traitcol", "recol", "genecol", "chicol",
-                "pcol", "oddscol", "kappacol","fishercol"], "sortable", None)
+    htmltools.createTable(
+              traitpage,
+              traitTable,
+            ["Disease/Trait", "# RE Genes", "# Trait Genes", 
+                "chi-square", "p-value", "odds ratio", "kappa", 
+                "fisher P", "permutation P", "benjamini P"],
+             "traitlisthead",
+              None,
+            ["traitcol", "recol", "genecol", "chicol", "pcol", 
+                "oddscol", "kappacol","fishercol","permcol", "bencol"],
+             "sortable", None)
     htmltools.endPage(traitpage)
     htmltools.savePage(traitpage, filename)
     
@@ -173,7 +237,15 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
     
     traitSet = set(gwasDB.__studyByTrait.keys())
     
+    pbar = ProgressBar()
+    pbar.setMaximum(len(traitSet))
+
+    pbar.updateProgress(0)
+    i = 0
     for trait in traitSet:
+        if i % 5 == 0:
+            pbar.updateProgress(i)
+        i+=1
         traitGenes = gwasDB.getGenesForTrait(trait, pfilter_cutoff)
         
         if len(traitGenes) == 0: 
@@ -237,6 +309,8 @@ def computeTraitGeneLists(RE_genes, drug_genes, pfilter_cutoff):
                 pvalue, oddsratio, kappa, fisherp)
         
         __traitMetaAnalysis[trait]['geneset_size'] = len(traitGenes)
+    
+    pbar.finalize()
 
 def getGWASFrequencyTable(genes):
     output_list = []
@@ -682,12 +756,18 @@ if __name__ == "__main__":
     print "Creating referenced HTML gene and trait list reports..."
     
     # write trait frequency tables
+
+    print "Creating trait pages...",
+    print "1",
     writeTraitPage(os.sep.join([output_dir,"gwas_traits.html"]), "GWAS Traits for Rapidly Evolving Genes", "Listing of disease traits associated with genes in the rapidly evolving geneset", studyGenes, pfilter_cutoff)
+    print "2",
     writeTraitPage(os.sep.join([output_dir,"drugbank_traits.html"]), "GWAS Traits for Drugbank Genes", "Listing of disease traits associated with genes in the drugbank targets database", gwasDB.__geneSet & drugDB.__geneSet, pfilter_cutoff)
+    print "3",
     writeTraitPage(os.sep.join([output_dir,"overlap_traits.html"]), "GWAS Traits for overlap of RE and Drugbank", "Listing of disease traits associated with genes in the rapidly evolving geneset and the drugbank targets database", overlap, pfilter_cutoff)
-    
+    print "done"
     # write gene tables
     
+    print "Creating GeneLists..."
     total, geneTable = getGWASFrequencyTable(commonGenes)
     writeGenePage(output_dir, os.sep.join([output_dir,"gwas_genes.html"]), "Rapidly Evolving Genes found in GWAS Disease Studies", "Listing of rapidly evolving genes found in GWAS.", total, geneTable)
     writeGeneListToFile(os.sep.join(["results","log","gwas_genes.txt"]), [row[0] for row in geneTable])
