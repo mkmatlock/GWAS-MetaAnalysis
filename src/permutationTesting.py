@@ -25,40 +25,28 @@ def computeOverlapPval(s1, s2, n):
     d = n - (a + b + c)
     return fisher.compute(a,b,c,d)
 
-def simultaneousPermutation(n, category_sizes, testset, iterations):
-    avg_p_values = [0] * len(category_sizes)
+def simultaneousPermutation(significance_level, n, categories, testset_size, iterations):
     
-    print "Running permutation test on %d categories drawn from %d items for %d iterations" % (len(category_sizes), n, iterations)
+    print "Running permutation test on %d categories with test set size of %d drawn from %d items for %d iterations" % (len(categories), testset_size, n, iterations)
     pbar = ProgressBar()
     pbar.setMaximum(iterations)
     pbar.updateProgress(0)
+
+    total_sig_hypotheses = 0
 
     sampleset = xrange(0, n)
     for i in xrange(0, iterations):
         if i % 1 == 0:
             pbar.updateProgress(i)
-        for j, c in enumerate(category_sizes):
-            s1 = set(random.sample(sampleset, c))
-            avg_p_values[j] += computeOverlapPval(s1, testset, n)
+        test_set = set(random.sample(sampleset, testset_size))
+        total_sig_hypotheses += len([j for j, s_c in enumerate(categories) if computeOverlapPval(s_c, test_set, n) < significance_level])
 
     pbar.finalize()
 
-    return [v / float(iterations) for v in avg_p_values]
-
-def simultaneousPermutationIncludeTestSet(n, category_sizes, testset_size, iterations):
-    avg_p_values = [0] * len(category_sizes)
-
-    sampleset = xrange(0, n)
-    for i in xrange(0, iterations):
-        for j, c in enumerate(category_sizes):
-            s1 = set(random.sample(sampleset, c))
-            s2 = set(random.sample(sampleset, testset_size))
-            avg_p_values[j] += computeOverlapPval(s1, s2, n)
-
-    return [v / float(iterations) for v in avg_p_values]
+    return float(total_sig_hypotheses) / float(iterations)
 
 if __name__ == "__main__":
-    n = 50
+    n = 40
     iterations = 1000
 
     fisher.init(n)
@@ -66,11 +54,10 @@ if __name__ == "__main__":
     testset = set([0, 1, 4, 7, 2, 10, 40, 32])
 
     categories = [set([0,1]),set([1,4,7,0,2,10,40]),set([10,2,40]),set([32])]
-    category_sizes = [len(s) for s in categories]
 
     cat_pvalues = [computeOverlapPval(s, testset, n) for s in categories]
-    perm_pvalues = simultaneousPermutation(n, category_sizes, testset, iterations)
-    perm_pvalues2 = simultaneousPermutationIncludeTestSet(n, category_sizes, len(testset), iterations)
+    perm_DR = simultaneousPermutation(0.05, n, categories, len(testset), iterations)
 
+    print "E[P_rand | H0] = %.7f" % (perm_DR)
     for i in xrange(0, len(categories)):
-        print "%s || %.7f     %.7f     %.7f" % ("%d" % (i), cat_pvalues[i], perm_pvalues[i], perm_pvalues2[i])
+        print "%s || %.7f" % ("%d" % (i), cat_pvalues[i])
