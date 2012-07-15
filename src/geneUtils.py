@@ -5,23 +5,27 @@ import os
 __DEBUG=0
 
 
-def contingentChiSquare(a,b,c,d):
-    chisq      = math.pow(a*d-b*c,2) * (a + b + c + d) / ((a+b)*(c+d)*(b+d)*(a+c))
+def chiSquare(a,b,c,d):
+    return math.pow(a*d-b*c,2) * (a + b + c + d) / ((a+b)*(c+d)*(b+d)*(a+c))
 
-    if b*c == 0:
-        oddsratio = float("inf")
-    else:
-        oddsratio  = float(a * d) / float(b * c)
-    
+def kappaStatistic(a,b,c,d):
     t = float(a + b + c + d)
     pr_a = (a + d) / t
     pr_p = (a + b) / t * (a + c) / t
     pr_n = (b + d) / t * (c + d) / t
     pr_e = pr_p + pr_n
     kappa = ( pr_a - pr_e ) / ( 1 - pr_e )
-    
-    return chisq, oddsratio, kappa
-    
+
+    return kappa
+
+def oddsRatio(a,b,c,d):
+    if b*c == 0:
+        oddsratio = float("inf")
+    else:
+        oddsratio = float(a * d) / float(b * c)
+
+    return oddsratio
+
 replacement_dict = {"hat":"hat1", "cdkal":"cdkal1"}
 
 def geneFrequency(geneFreqDict, geneSet):
