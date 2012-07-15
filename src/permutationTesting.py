@@ -26,26 +26,35 @@ def computeOverlapPval(s1, s2, n):
     probability_value = fisher.compute(a,b,c,d)
     return fisher.significance(probability_value, a,b,c,d)
 
-
-def simultaneousPermutation(significance_level, n, categories, testset_size, iterations):
-    
+def simultaneousPermutationWithMultipleSignificanceLevels(significance_levels, n, categories, testset_size, iterations):
     print "Running permutation test on %d categories with test set size of %d drawn from %d items for %d iterations" % (len(categories), testset_size, n, iterations)
     pbar = ProgressBar()
     pbar.setMaximum(iterations)
     pbar.updateProgress(0)
 
-    total_sig_hypotheses = 0
+    total_sig_hypotheses = [0] * len(significance_levels)
+    num_sig_levels = len(significance_levels)
 
     sampleset = xrange(0, n)
     for i in xrange(0, iterations):
         if i % 1 == 0:
             pbar.updateProgress(i)
         test_set = set(random.sample(sampleset, testset_size))
-        total_sig_hypotheses += len([j for j, s_c in enumerate(categories) if computeOverlapPval(s_c, test_set, n) < significance_level])
+        for j, s_c in enumerate(categories):
+            pval = computeOverlapPval(s_c, test_set, n)
+
+            for k in xrange(0, num_sig_levels):
+                if pval <= significance_levels[k]:
+                    total_sig_hypotheses[k] += 1
 
     pbar.finalize()
 
-    return float(total_sig_hypotheses) / float(iterations)
+    return [ float(total_sig) / float(iterations) for total_sig in total_sig_hypotheses ]
+
+def simultaneousPermutation(significance_level, n, categories, testset_size, iterations):
+    result = simultaneousPermutationWithMultipleSignificanceLevels([significance_level], n, categories, testset_size, iterations)
+    return result[0]
+
 
 if __name__ == "__main__":
     n = 40
@@ -58,8 +67,13 @@ if __name__ == "__main__":
     categories = [set([0,1]),set([1,4,7,0,2,10,40]),set([10,2,40]),set([32])]
 
     cat_pvalues = [computeOverlapPval(s, testset, n) for s in categories]
-    perm_DR = simultaneousPermutation(0.05, n, categories, len(testset), iterations)
+    levels = [0.1, 0.05, 0.01, 0.005]
+    perm_DR = simultaneousPermutationWithMultipleSignificanceLevels(levels, n, categories, len(testset), iterations)
 
-    print "E[P_rand | H0] = %.7f" % (perm_DR)
+    print "FDR:"
+    for i in xrange(0,4):
+        print "E[V/R] = %.7f at %.4f" % (perm_DR[i], levels[i])
+
+    print "Sample permutation results:"
     for i in xrange(0, len(categories)):
         print "%s || %.7f" % ("%d" % (i), cat_pvalues[i])
